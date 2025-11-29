@@ -1,16 +1,59 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { insertPromoCodeSchema } from "@shared/schema";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  
+  // Promo Code Routes
+  app.get("/api/promoCodes", async (req, res) => {
+    const codes = await storage.getPromoCodes();
+    res.json(codes);
+  });
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  app.post("/api/promoCodes", async (req, res) => {
+    const parsed = insertPromoCodeSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid promo code data" });
+    }
+    
+    // Check if code already exists
+    const existing = await storage.getPromoCodeByCode(parsed.data.code);
+    if (existing) {
+      return res.status(409).json({ message: "Promo code already exists" });
+    }
+
+    const promo = await storage.createPromoCode(parsed.data);
+    res.status(201).json(promo);
+  });
+
+  app.put("/api/promoCodes/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+
+    const parsed = insertPromoCodeSchema.partial().safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid update data" });
+    }
+
+    const updated = await storage.updatePromoCode(id, parsed.data);
+    if (!updated) return res.status(404).json({ message: "Promo code not found" });
+
+    res.json(updated);
+  });
+
+  app.delete("/api/promoCodes/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+
+    const success = await storage.deletePromoCode(id);
+    if (!success) return res.status(404).json({ message: "Promo code not found" });
+
+    res.status(204).send();
+  });
 
   return httpServer;
 }

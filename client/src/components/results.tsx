@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
-import { Check, Info, Star, Zap, ShieldCheck, ThermometerSun, Tag } from "lucide-react";
+import { Check, Info, Star, Zap, ShieldCheck, ThermometerSun, Tag, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getRebate } from "@/lib/promoCodeManager";
+import { useQuery } from "@tanstack/react-query";
+import { fetchPromoCodes, findRebateAmount } from "@/lib/promoCodeManager";
 
 interface ResultsProps {
   onSelect: (tier: string) => void;
@@ -166,8 +167,22 @@ export function Results({ onSelect, quizData }: ResultsProps) {
   const systemType = quizData.systemType || 'split'; 
   const promoCode = (quizData.rebate || "").trim();
   
-  // Lookup Rebate from Promo Code using the new Manager
-  let rebate = getRebate(promoCode);
+  // Fetch promo codes from API
+  const { data: codes = [], isLoading } = useQuery({
+    queryKey: ["promoCodes"],
+    queryFn: fetchPromoCodes
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  // Lookup Rebate from API Data
+  let rebate = findRebateAmount(codes, promoCode);
 
   const pricing = getPricing(priority, size, systemType, rebate);
   

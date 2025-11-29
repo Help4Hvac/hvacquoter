@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Table, 
   TableBody, 
@@ -31,22 +32,23 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { 
-  getAllPromoCodes, 
-  addPromoCode, 
+  fetchPromoCodes, 
+  createPromoCode, 
   updatePromoCode, 
-  removePromoCode, 
-  togglePromoStatus,
-  type PromoCode 
+  deletePromoCode, 
+  togglePromoStatus
 } from "@/lib/promoCodeManager";
-import { Pencil, Trash2, Plus, Tag } from "lucide-react";
+import { type PromoCode } from "@shared/schema";
+import { Pencil, Trash2, Plus, Tag, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function PromoCodeManager() {
-  const [codes, setCodes] = useState<PromoCode[]>([]);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [currentCode, setCurrentCode] = useState<PromoCode | null>(null);
-  const { toast } = useToast();
 
   // Form states
   const [formData, setFormData] = useState({
@@ -55,27 +57,55 @@ export default function PromoCodeManager() {
     description: ""
   });
 
-  const refreshCodes = () => {
-    setCodes(getAllPromoCodes());
-  };
+  // Queries
+  const { data: codes = [], isLoading } = useQuery({
+    queryKey: ["promoCodes"],
+    queryFn: fetchPromoCodes
+  });
 
-  useEffect(() => {
-    refreshCodes();
-  }, []);
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: createPromoCode,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["promoCodes"] });
+      toast({ title: "Success", description: "Promo code created" });
+      setIsAddOpen(false);
+      setFormData({ code: "", amount: "", description: "" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: "Failed to create code", variant: "destructive" });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => updatePromoCode(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["promoCodes"] });
+      toast({ title: "Success", description: "Promo code updated" });
+      setIsEditOpen(false);
+      setCurrentCode(null);
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deletePromoCode,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["promoCodes"] });
+      toast({ title: "Success", description: "Promo code deleted" });
+    }
+  });
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const amount = parseInt(formData.amount);
     if (!formData.code || isNaN(amount)) return;
 
-    addPromoCode(formData.code, amount, formData.description);
-    toast({
-      title: "Promo Code Added",
-      description: `${formData.code} has been created successfully.`
+    createMutation.mutate({
+      code: formData.code,
+      amount,
+      description: formData.description,
+      isActive: true
     });
-    setIsAddOpen(false);
-    setFormData({ code: "", amount: "", description: "" });
-    refreshCodes();
   };
 
   const handleEditSubmit = (e: React.FormEvent) => {
@@ -85,14 +115,13 @@ export default function PromoCodeManager() {
     const amount = parseInt(formData.amount);
     if (isNaN(amount)) return;
 
-    updatePromoCode(currentCode.code, amount, formData.description);
-    toast({
-      title: "Promo Code Updated",
-      description: `${currentCode.code} has been updated.`
+    updateMutation.mutate({
+      id: currentCode.id,
+      data: {
+        amount,
+        description: formData.description
+      }
     });
-    setIsEditOpen(false);
-    setCurrentCode(null);
-    refreshCodes();
   };
 
   const openEdit = (code: PromoCode) => {
@@ -100,24 +129,25 @@ export default function PromoCodeManager() {
     setFormData({
       code: code.code,
       amount: code.amount.toString(),
-      description: code.description
+      description: code.description || ""
     });
     setIsEditOpen(true);
   };
 
-  const handleDelete = (code: string) => {
-    removePromoCode(code);
-    toast({
-      title: "Promo Code Deleted",
-      description: "The code has been removed permanently."
+  const handleToggle = (code: PromoCode) => {
+    updateMutation.mutate({
+      id: code.id,
+      data: { isActive: !code.isActive }
     });
-    refreshCodes();
   };
 
-  const handleToggle = (code: string) => {
-    togglePromoStatus(code);
-    refreshCodes();
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-10 px-4 max-w-6xl">
@@ -176,7 +206,9 @@ export default function PromoCodeManager() {
                 />
               </div>
               <DialogFooter>
-                <Button type="submit">Create Code</Button>
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? "Creating..." : "Create Code"}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -203,7 +235,7 @@ export default function PromoCodeManager() {
               </TableRow>
             ) : (
               codes.map((code) => (
-                <TableRow key={code.code}>
+                <TableRow key={code.id}>
                   <TableCell className="font-mono font-bold text-primary">
                     {code.code}
                   </TableCell>
@@ -217,7 +249,8 @@ export default function PromoCodeManager() {
                     <div className="flex items-center gap-2">
                       <Switch 
                         checked={code.isActive}
-                        onCheckedChange={() => handleToggle(code.code)}
+                        onCheckedChange={() => handleToggle(code)}
+                        disabled={updateMutation.isPending}
                       />
                       <span className={`text-sm ${code.isActive ? "text-foreground" : "text-muted-foreground"}`}>
                         {code.isActive ? "Active" : "Inactive"}
@@ -250,7 +283,7 @@ export default function PromoCodeManager() {
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction 
-                              onClick={() => handleDelete(code.code)}
+                              onClick={() => deleteMutation.mutate(code.id)}
                               className="bg-destructive hover:bg-destructive/90"
                             >
                               Delete
@@ -303,7 +336,9 @@ export default function PromoCodeManager() {
               />
             </div>
             <DialogFooter>
-              <Button type="submit">Save Changes</Button>
+              <Button type="submit" disabled={updateMutation.isPending}>
+                Save Changes
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
