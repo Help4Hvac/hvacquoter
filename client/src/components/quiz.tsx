@@ -4,9 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Home, Flame, AlertTriangle, DollarSign, Thermometer, Zap, CheckCircle2 } from "lucide-react";
+import { Home, Flame, AlertTriangle, DollarSign, Thermometer, Zap, CheckCircle2, Building2, Building } from "lucide-react";
 
-import houseImage from "@assets/generated_images/modern_suburban_house_exterior_sunny_day.png";
+import ranchImage from "@assets/generated_images/single_story_ranch_house_exterior.png";
+import twoStoryImage from "@assets/generated_images/two_story_colonial_house_exterior.png";
+import townhouseImage from "@assets/generated_images/modern_townhouse_row_exterior.png";
+import condoImage from "@assets/generated_images/modern_condo_building_exterior.png";
 import hvacImage from "@assets/generated_images/modern_clean_hvac_unit_in_utility_room.png";
 import familyImage from "@assets/generated_images/happy_family_relaxing_on_couch_comfort.png";
 import heroImage from "@assets/generated_images/modern_bright_living_room_with_subtle_hvac_vent.png";
@@ -17,14 +20,28 @@ interface QuizProps {
 
 const steps = [
   {
-    id: "size",
-    question: "What is the approximate size of your home?",
-    image: houseImage,
+    id: "type",
+    question: "What type of house do you have?",
+    image: ranchImage,
     options: [
-      { id: "small", label: "Under 1,500 sq ft", icon: Home },
-      { id: "medium", label: "1,500 - 2,500 sq ft", icon: Home },
-      { id: "large", label: "Over 2,500 sq ft", icon: Home },
+      { id: "ranch", label: "Ranch House", icon: Home, image: ranchImage },
+      { id: "two-story", label: "Two-Story House", icon: Building, image: twoStoryImage },
+      { id: "townhouse", label: "Townhouse", icon: Building2, image: townhouseImage },
+      { id: "condo", label: "Condo", icon: Building2, image: condoImage },
     ],
+    layout: "grid", 
+  },
+  {
+    id: "size",
+    question: "What size system do you need?",
+    image: heroImage,
+    options: [
+      { id: "2ton", label: "2 Ton (1000-1200 sq ft)", icon: Home },
+      { id: "3ton", label: "3 Ton (1200-1800 sq ft)", icon: Home },
+      { id: "4ton", label: "4 Ton (1800-2400 sq ft)", icon: Home },
+      { id: "5ton", label: "5 Ton (2400-3000 sq ft)", icon: Home },
+    ],
+    layout: "list",
   },
   {
     id: "system",
@@ -36,6 +53,7 @@ const steps = [
       { id: "boiler", label: "Boiler / Radiators", icon: Thermometer },
       { id: "unknown", label: "I'm not sure", icon: AlertTriangle },
     ],
+    layout: "list",
   },
   {
     id: "issue",
@@ -47,6 +65,7 @@ const steps = [
       { id: "bills", label: "High energy bills", icon: DollarSign },
       { id: "comfort", label: "Uneven temperatures", icon: Thermometer },
     ],
+    layout: "list",
   },
   {
     id: "priority",
@@ -57,6 +76,7 @@ const steps = [
       { id: "value", label: "Best Value (Cost vs. Performance)", icon: CheckCircle2 },
       { id: "performance", label: "Maximum Comfort & Efficiency", icon: Zap },
     ],
+    layout: "list",
   },
 ];
 
@@ -78,14 +98,20 @@ export function Quiz({ onComplete }: QuizProps) {
   };
 
   const step = steps[currentStep];
+  
+  // Determine which image to show on the left side
+  // For the first step, we might want a generic one or the one corresponding to the selection if we wanted to get fancy, 
+  // but let's stick to the step image.
+  // However, for the House Type question, the user asked for images ABOVE the label for the options.
+  // So the main image on the left can just be the ranch image or a generic exterior.
 
   return (
     <div className="w-full max-w-6xl mx-auto bg-card rounded-2xl shadow-xl overflow-hidden border border-border/50 grid md:grid-cols-2 min-h-[500px]">
       {/* Image Side */}
-      <div className="relative h-48 md:h-auto overflow-hidden">
+      <div className="relative h-48 md:h-auto overflow-hidden hidden md:block">
         <AnimatePresence mode="wait">
           <motion.div
-            key={step.image}
+            key={step.id}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -116,7 +142,7 @@ export function Quiz({ onComplete }: QuizProps) {
       </div>
 
       {/* Question Side */}
-      <div className="p-8 md:p-12 flex flex-col justify-center bg-card">
+      <div className="p-6 md:p-12 flex flex-col justify-center bg-card overflow-y-auto max-h-[80vh] md:max-h-auto">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={currentStep}
@@ -125,15 +151,44 @@ export function Quiz({ onComplete }: QuizProps) {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: direction > 0 ? -50 : 50, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
+            className="w-full"
           >
-            <h2 className="text-3xl font-heading font-bold text-primary mb-8 leading-tight">
+            <h2 className="text-2xl md:text-3xl font-heading font-bold text-primary mb-8 leading-tight">
               {step.question}
             </h2>
 
-            <div className="grid gap-4">
+            <div className={`grid gap-4 ${step.layout === 'grid' ? 'grid-cols-2' : 'grid-cols-1'}`}>
               {step.options.map((option) => {
                 const Icon = option.icon;
                 const isSelected = answers[step.id] === option.id;
+                
+                if (step.layout === 'grid' && 'image' in option) {
+                  // Card style for house types
+                   return (
+                    <button
+                      key={option.id}
+                      onClick={() => handleSelect(option.id)}
+                      className={`
+                        group relative flex flex-col items-center text-center p-0 rounded-xl border-2 overflow-hidden transition-all duration-200 h-full
+                        ${isSelected 
+                          ? "border-accent ring-1 ring-accent" 
+                          : "border-border hover:border-primary/50 hover:shadow-md"}
+                      `}
+                      data-testid={`quiz-option-${option.id}`}
+                    >
+                      <div className="w-full h-32 overflow-hidden">
+                        <img src={option.image} alt={option.label} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      </div>
+                      <div className={`w-full p-4 ${isSelected ? "bg-accent text-white" : "bg-card text-foreground"}`}>
+                        <span className="font-semibold text-sm md:text-base block">
+                          {option.label}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                }
+
+                // List style for other questions
                 return (
                   <button
                     key={option.id}
