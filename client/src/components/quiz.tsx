@@ -13,9 +13,9 @@ import condoImage from "@assets/generated_images/modern_condo_building_exterior.
 import hvacImage from "@assets/generated_images/modern_clean_hvac_unit_in_utility_room.png";
 import familyImage from "@assets/generated_images/happy_family_relaxing_on_couch_comfort.png";
 import heroImage from "@assets/generated_images/modern_bright_living_room_with_subtle_hvac_vent.png";
-import splitImage from "@assets/generated_images/hvac_split_system_diagram_showing_outdoor_and_indoor_units.png";
-import packageImage from "@assets/generated_images/hvac_package_unit_exterior.png";
-import gasPackImage from "@assets/generated_images/hvac_gas_pack_unit_exterior.png";
+import splitImage from "@assets/generated_images/split_system_diagram_outdoor_and_indoor.png";
+import packageImage from "@assets/generated_images/package_unit_diagram_single_unit.png";
+import gasPackImage from "@assets/generated_images/gas_pack_diagram_single_unit_with_gas.png";
 
 
 interface QuizProps {
