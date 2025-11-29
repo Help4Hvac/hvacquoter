@@ -3,6 +3,7 @@ import { Check, Info, Star, Zap, ShieldCheck, ThermometerSun, Tag } from "lucide
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getRebate } from "@/lib/promoCodeManager";
 
 interface ResultsProps {
   onSelect: (tier: string) => void;
@@ -70,14 +71,6 @@ const DEALER_COSTS: Record<string, Record<string, Record<string, SystemData>>> =
       '5ton': { sku: '5YCC4060A1115A', cost: 8800 },
     }
   }
-};
-
-// --- Promo Code Logic ---
-const PROMO_CODES: Record<string, number> = {
-  'SWITCH2ELECTRIC': 500,
-  'IAQBUNDLE': 750,
-  'FASTTRACK': 500,
-  'FULLSYSTEM': 1000
 };
 
 // --- Calculation Logic ---
@@ -171,12 +164,10 @@ export function Results({ onSelect, quizData }: ResultsProps) {
   const priority = quizData.priority || 'value';
   const size = quizData.size || '3ton';
   const systemType = quizData.systemType || 'split'; 
-  const promoCode = (quizData.rebate || "").toUpperCase().replace(/\s+/g, '');
+  const promoCode = (quizData.rebate || "").trim();
   
-  // Lookup Rebate from Promo Code
-  let rebate = PROMO_CODES[promoCode] || 0;
-  // Cap rebate at 1000 (though max in map is 1000 anyway, good for safety)
-  rebate = Math.min(rebate, 1000);
+  // Lookup Rebate from Promo Code using the new Manager
+  let rebate = getRebate(promoCode);
 
   const pricing = getPricing(priority, size, systemType, rebate);
   
