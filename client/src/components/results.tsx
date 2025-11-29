@@ -31,13 +31,19 @@ const DEALER_COSTS: Record<string, Record<string, Record<string, number>>> = {
       '2ton': 3431, 
       '3ton': 3768, 
       '4ton': 4598, 
-      '5ton': 4900, // Estimated based on 4ton
+      '5ton': 4900, // Estimated
     },
     package: {
-      '2ton': 4200, // Estimated premium over split
+      '2ton': 4200, // Estimated 
       '3ton': 4600, // Estimated
       '4ton': 5400, // Estimated
       '5ton': 5800, // Estimated
+    },
+    gaspack: {
+      '2ton': 4500, // Estimated premium over package
+      '3ton': 4900, 
+      '4ton': 5700, 
+      '5ton': 6100,
     }
   },
   amstd: {
@@ -48,10 +54,16 @@ const DEALER_COSTS: Record<string, Record<string, Record<string, number>>> = {
       '5ton': 7200, // Estimated
     },
     package: {
-      '2ton': 6200, // Estimated premium
+      '2ton': 6200, // Estimated
       '3ton': 6800, // Estimated
       '4ton': 7900, // Estimated
       '5ton': 8400, // Estimated
+    },
+    gaspack: {
+      '2ton': 6600, // Estimated premium over package
+      '3ton': 7200, 
+      '4ton': 8300, 
+      '5ton': 8800,
     }
   }
 };
@@ -80,16 +92,22 @@ const getPricing = (priority: string, size: string, systemType: string) => {
   // Normalize inputs
   let normalizedSize = size || '3ton';
   let normalizedSystemType = 'split'; 
+  
   if (systemType && systemType.includes('package')) {
     normalizedSystemType = 'package';
+  }
+  if (systemType && systemType.includes('gaspack')) {
+    normalizedSystemType = 'gaspack';
   }
 
   // Fallback for cost if not found
   if (!DEALER_COSTS[brand]?.[normalizedSystemType]?.[normalizedSize]) {
-    // Fallback to ameristar split 3ton if completely lost
     console.warn(`Pricing data missing for ${brand} ${normalizedSystemType} ${normalizedSize}, using fallback.`);
     normalizedSize = '3ton';
-    // brand and systemType should exist in top level structure, but let's be safe
+    // Ensure we have a valid fallback path if systemType is totally unknown
+    if (!DEALER_COSTS[brand][normalizedSystemType]) {
+       normalizedSystemType = 'split';
+    }
   }
 
   const dealerCost = DEALER_COSTS[brand][normalizedSystemType][normalizedSize];
@@ -132,7 +150,9 @@ export function Results({ onSelect, quizData }: ResultsProps) {
   const pricing = getPricing(priority, size, systemType);
   
   const sizeDisplay = size.replace('ton', ' Ton');
-  const systemDisplay = systemType === 'package' ? 'Package Unit' : 'Split System';
+  let systemDisplay = 'Split System';
+  if (systemType === 'package') systemDisplay = 'Package Unit';
+  if (systemType === 'gaspack') systemDisplay = 'Gas Pack';
 
   const tiers = [
     {

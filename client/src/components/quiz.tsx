@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Home, Flame, AlertTriangle, DollarSign, Thermometer, Zap, CheckCircle2, Building2, Building, Box, Settings2 } from "lucide-react";
+import { Home, Flame, AlertTriangle, DollarSign, Thermometer, Zap, CheckCircle2, Building2, Building, Box, Settings2, Gauge } from "lucide-react";
 
 import ranchImage from "@assets/generated_images/single_story_ranch_house_exterior.png";
 import twoStoryImage from "@assets/generated_images/two_story_colonial_house_exterior.png";
@@ -15,6 +15,7 @@ import familyImage from "@assets/generated_images/happy_family_relaxing_on_couch
 import heroImage from "@assets/generated_images/modern_bright_living_room_with_subtle_hvac_vent.png";
 import splitImage from "@assets/generated_images/hvac_split_system_diagram_showing_outdoor_and_indoor_units.png";
 import packageImage from "@assets/generated_images/hvac_package_unit_exterior.png";
+import gasPackImage from "@assets/generated_images/hvac_gas_pack_unit_exterior.png";
 
 
 interface QuizProps {
@@ -29,6 +30,7 @@ const steps = [
     options: [
       { id: "split", label: "Split System (Outdoor Unit + Indoor Unit)", icon: Settings2, image: splitImage },
       { id: "package", label: "Package Unit (Single Large Outdoor Unit)", icon: Box, image: packageImage },
+      { id: "gaspack", label: "Gas Pack (Gas Heat + Electric Cooling)", icon: Gauge, image: gasPackImage },
     ],
     layout: "grid",
   },
