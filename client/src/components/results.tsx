@@ -22,48 +22,52 @@ const OFFSET_GOLD_MAX = 2000;
 const OFFSET_PLATINUM_MIN = 3000;
 const OFFSET_PLATINUM_MAX = 4000;
 
+interface SystemData {
+  sku: string;
+  cost: number;
+}
 
-// --- Dealer Cost Data (Mocked based on provided examples) ---
-// Structure: Brand -> SystemType -> Size -> Cost
-const DEALER_COSTS: Record<string, Record<string, Record<string, number>>> = {
+// --- Dealer Cost Data with SKUs ---
+// Structure: Brand -> SystemType -> Size -> { sku, cost }
+const DEALER_COSTS: Record<string, Record<string, Record<string, SystemData>>> = {
   ameristar: {
     split: {
-      '2ton': 3431, 
-      '3ton': 3768, 
-      '4ton': 4598, 
-      '5ton': 4900, // Estimated
+      '2ton': { sku: 'A5HP4024A1000A + A5AHC002A1B30A', cost: 3431 },
+      '3ton': { sku: 'A5HP4036A1000A + A5AHC004A1D30A', cost: 3768 },
+      '4ton': { sku: 'A5HP4048A1000A + A5AHC006A1D30A', cost: 4598 },
+      '5ton': { sku: 'A5HP4060A1000A + A5AHC007A1D30A', cost: 4900 },
     },
     package: {
-      '2ton': 4200, // Estimated 
-      '3ton': 4600, // Estimated
-      '4ton': 5400, // Estimated
-      '5ton': 5800, // Estimated
+      '2ton': { sku: 'A5PH3024A1000A', cost: 4200 },
+      '3ton': { sku: 'A5PH3036A1000A', cost: 4600 },
+      '4ton': { sku: 'A5PH3048A1000A', cost: 5400 },
+      '5ton': { sku: 'A5PH3060A1000A', cost: 5800 },
     },
     gaspack: {
-      '2ton': 4500, // Estimated premium over package
-      '3ton': 4900, 
-      '4ton': 5700, 
-      '5ton': 6100,
+      '2ton': { sku: 'A5PG3024A1060A', cost: 4500 },
+      '3ton': { sku: 'A5PG3036A1070A', cost: 4900 },
+      '4ton': { sku: 'A5PG3048A1090A', cost: 5700 },
+      '5ton': { sku: 'A5PG3060A1115A', cost: 6100 },
     }
   },
   amstd: {
     split: {
-      '2ton': 5146, 
-      '3ton': 5673, 
-      '4ton': 6800, // Estimated
-      '5ton': 7200, // Estimated
+      '2ton': { sku: '5A6H4024A1000A + 5TEM4B02AC21SA', cost: 5146 },
+      '3ton': { sku: '5A6H4036A1000A + 5TEM4D04AC31SA', cost: 5673 },
+      '4ton': { sku: '5A6H4048A1000A + 5TEM4D06AC41SA', cost: 6800 },
+      '5ton': { sku: '5A6H4060A1000A + 5TEM4D07AC51SA', cost: 7200 },
     },
     package: {
-      '2ton': 6200, // Estimated
-      '3ton': 6800, // Estimated
-      '4ton': 7900, // Estimated
-      '5ton': 8400, // Estimated
+      '2ton': { sku: '5WCC4024A1000A', cost: 6200 },
+      '3ton': { sku: '5WCC4036A1000A', cost: 6800 },
+      '4ton': { sku: '5WCC4048A1000A', cost: 7900 },
+      '5ton': { sku: '5WCC4060A1000A', cost: 8400 },
     },
     gaspack: {
-      '2ton': 6600, // Estimated premium over package
-      '3ton': 7200, 
-      '4ton': 8300, 
-      '5ton': 8800,
+      '2ton': { sku: '5YCC4024A1060A', cost: 6600 },
+      '3ton': { sku: '5YCC4036A1070A', cost: 7200 },
+      '4ton': { sku: '5YCC4048A1090A', cost: 8300 },
+      '5ton': { sku: '5YCC4060A1115A', cost: 8800 },
     }
   }
 };
@@ -110,7 +114,8 @@ const getPricing = (priority: string, size: string, systemType: string) => {
     }
   }
 
-  const dealerCost = DEALER_COSTS[brand][normalizedSystemType][normalizedSize];
+  const systemData = DEALER_COSTS[brand][normalizedSystemType][normalizedSize];
+  const dealerCost = systemData.cost;
   
   // Calculate Silver Base Price
   const silverPrice = calculateRetail(dealerCost, normalizedSize);
