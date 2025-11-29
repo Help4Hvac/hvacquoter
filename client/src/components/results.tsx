@@ -122,14 +122,6 @@ const getPricing = (priority: string, size: string, systemType: string, rebate: 
   // Calculate Silver Base Price
   const baseSilverPrice = calculateRetail(dealerCost, normalizedSize);
   
-  // Calculate Gold Range
-  const baseGoldMin = baseSilverPrice + OFFSET_GOLD_MIN;
-  const baseGoldMax = baseSilverPrice + OFFSET_GOLD_MAX;
-  
-  // Calculate Platinum Range
-  const basePlatinumMin = baseSilverPrice + OFFSET_PLATINUM_MIN;
-  const basePlatinumMax = baseSilverPrice + OFFSET_PLATINUM_MAX;
-  
   // Apply Rebate Logic (Cost Floor Check)
   // Formula: AdjustedRetail = Max(Retail - Min(Rebate, 1000), DealerCost)
   
@@ -140,20 +132,11 @@ const getPricing = (priority: string, size: string, systemType: string, rebate: 
 
   const silverPrice = applyRebate(baseSilverPrice, rebate);
   
-  // Gold & Platinum use offset from ADJUSTED Silver (based on user request interpretation: "Gold = Silver + Offset")
-  // However, typical pricing logic usually adds offset to base then rebates. 
-  // User request says: "Gold = Silver + $1,500–$2,000 - rebate" -> wait, "Silver = Final Price" (which is already rebated).
-  // User formula: "Gold = Silver + $1,500... - rebate" -> This would double dip rebate if Silver is already rebated?
-  // Let's re-read carefully: "Silver = Final Price" (which is `retail - rebate`).
-  // "Gold = Silver + 1500 - rebate".
-  // If Silver is already rebated, then Gold = (Retail - Rebate) + 1500 - Rebate. That subtracts rebate twice.
-  // LIKELY INTENT: Gold = (BaseSilver + 1500) - Rebate.
-  // Which is what I have below: calculate base, then apply rebate function.
+  // Pricing tier calculations based on Silver price
+  // Gold: 15% above Silver
+  const goldPrice = Math.round(silverPrice * 1.15);
   
-  const goldMin = applyRebate(baseSilverPrice + OFFSET_GOLD_MIN, rebate);
-  const goldMax = applyRebate(baseSilverPrice + OFFSET_GOLD_MAX, rebate);
-  
-  // Platinum = Silver * 1.25
+  // Platinum: 25% above Silver
   const platinumPrice = Math.round(silverPrice * 1.25);
 
   
@@ -167,9 +150,9 @@ const getPricing = (priority: string, size: string, systemType: string, rebate: 
       monthly: `$${getMonthly(silverPrice)}/mo` 
     },
     gold: { 
-      price: goldMin,
-      range: `${formatCurrency(goldMin)} - ${formatCurrency(goldMax)}`, 
-      monthly: `$${getMonthly(goldMin)}/mo` 
+      price: goldPrice,
+      range: `${formatCurrency(goldPrice)} - ${formatCurrency(goldPrice + 500)}`, 
+      monthly: `$${getMonthly(goldPrice)}/mo` 
     },
     platinum: { 
       price: platinumPrice,
