@@ -9,35 +9,50 @@ interface ResultsProps {
   quizData: Record<string, string>;
 }
 
-// Pricing Strategies based on equipment type
-// If priority is "budget", we use Ameristar pricing
-// If priority is "value" or "performance", we use American Standard pricing
-const getPricing = (priority: string) => {
-  const isBudget = priority === 'budget';
-  
-  if (isBudget) {
-    // Ameristar Pricing (Cost ~$3,768)
-    // Margins: Silver 55%, Gold 64%, Platinum 69%
-    return {
-      silver: { range: "$8,500 - $9,500", monthly: "$125/mo" },
-      gold: { range: "$10,500 - $11,500", monthly: "$165/mo" },
-      platinum: { range: "$12,500 - $13,500", monthly: "$195/mo" }
-    };
-  } else {
-    // American Standard Pricing (Cost ~$5,673)
-    // User provided specific ranges
-    return {
-      silver: { range: "$10,500 - $11,500", monthly: "$165/mo" },
-      gold: { range: "$12,500 - $13,500", monthly: "$195/mo" },
-      platinum: { range: "$14,500 - $16,000", monthly: "$225/mo" }
-    };
+// Pricing Data Lookup Table
+// Keys: brand -> size -> tier -> [priceRange, monthly]
+const PRICING_DATA: Record<string, Record<string, { silver: string[], gold: string[], platinum: string[] }>> = {
+  ameristar: {
+    '2ton': { silver: ["$7,500 - $8,500", "$105/mo"], gold: ["$9,000 - $10,000", "$135/mo"], platinum: ["$11,000 - $12,000", "$165/mo"] },
+    '3ton': { silver: ["$8,500 - $9,500", "$125/mo"], gold: ["$10,500 - $11,500", "$165/mo"], platinum: ["$12,500 - $13,500", "$195/mo"] },
+    '4ton': { silver: ["$11,000 - $12,000", "$155/mo"], gold: ["$13,000 - $14,500", "$195/mo"], platinum: ["$15,000 - $17,000", "$235/mo"] },
+    '5ton': { silver: ["$12,500 - $13,500", "$175/mo"], gold: ["$14,500 - $16,000", "$215/mo"], platinum: ["$16,500 - $18,500", "$255/mo"] }, // Extrapolated +1.5k from 4ton
+  },
+  amstd: {
+    '2ton': { silver: ["$9,500 - $10,500", "$145/mo"], gold: ["$11,000 - $12,500", "$175/mo"], platinum: ["$13,000 - $14,500", "$205/mo"] },
+    '3ton': { silver: ["$10,500 - $11,500", "$165/mo"], gold: ["$12,500 - $13,500", "$195/mo"], platinum: ["$14,500 - $16,000", "$225/mo"] },
+    '4ton': { silver: ["$13,000 - $14,500", "$195/mo"], gold: ["$15,000 - $16,500", "$235/mo"], platinum: ["$17,000 - $19,000", "$275/mo"] }, // Extrapolated +2.5k from 3ton
+    '5ton': { silver: ["$14,500 - $16,000", "$215/mo"], gold: ["$16,500 - $18,500", "$255/mo"], platinum: ["$19,000 - $21,500", "$295/mo"] }, // Extrapolated +1.5k from 4ton
   }
+};
+
+const getPricing = (priority: string, size: string) => {
+  const isBudget = priority === 'budget';
+  const brand = isBudget ? 'ameristar' : 'amstd';
+  
+  // Normalize size input or default to 3ton if undefined
+  let normalizedSize = size || '3ton';
+  if (!PRICING_DATA[brand][normalizedSize]) {
+    normalizedSize = '3ton'; // Fallback
+  }
+
+  const data = PRICING_DATA[brand][normalizedSize];
+
+  return {
+    silver: { range: data.silver[0], monthly: data.silver[1] },
+    gold: { range: data.gold[0], monthly: data.gold[1] },
+    platinum: { range: data.platinum[0], monthly: data.platinum[1] }
+  };
 };
 
 export function Results({ onSelect, quizData }: ResultsProps) {
   const priority = quizData.priority || 'value'; // Default to value if missing
-  const pricing = getPricing(priority);
+  const size = quizData.size || '3ton'; // Default to 3ton if missing
+  const pricing = getPricing(priority, size);
   
+  // Calculate display text for sizing context
+  const sizeDisplay = size.replace('ton', ' Ton');
+
   const tiers = [
     {
       id: "good",
@@ -110,7 +125,7 @@ export function Results({ onSelect, quizData }: ResultsProps) {
             Your Custom Comfort Solutions
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Based on your preference for <strong>{priority === 'budget' ? 'lowest upfront cost' : priority === 'value' ? 'best value' : 'maximum performance'}</strong>, here are our recommended installation packages.
+            Based on your home size ({sizeDisplay}) and preference for <strong>{priority === 'budget' ? 'lowest upfront cost' : priority === 'value' ? 'best value' : 'maximum performance'}</strong>, here are our recommended installation packages.
           </p>
         </motion.div>
       </div>
