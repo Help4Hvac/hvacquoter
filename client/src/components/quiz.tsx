@@ -96,7 +96,7 @@ const steps = [
   },
   {
     id: "rebate",
-    question: "Do you have a rebate or discount code?",
+    question: "Enter a promo code for rebates or discounts",
     image: familyImage,
     type: "input",
     options: [], 
@@ -123,9 +123,7 @@ export function Quiz({ onComplete }: QuizProps) {
   };
 
   const handleRebateSubmit = () => {
-    // If input is empty, just proceed with "0" or empty
-    // If it's a number, save it
-    const value = rebateInput.trim() || "0";
+    const value = rebateInput.trim() || "";
     handleSelect(value);
   };
 
@@ -188,8 +186,8 @@ export function Quiz({ onComplete }: QuizProps) {
                  <div className="relative">
                    <Tag className="absolute left-3 top-3 text-muted-foreground" />
                    <Input 
-                    type="number" 
-                    placeholder="Enter rebate amount (e.g. 500)" 
+                    type="text" 
+                    placeholder="Enter promo code (e.g. FullSystem)" 
                     className="pl-10 h-12 text-lg"
                     value={rebateInput}
                     onChange={(e) => setRebateInput(e.target.value)}
@@ -197,11 +195,11 @@ export function Quiz({ onComplete }: QuizProps) {
                    />
                  </div>
                  <p className="text-sm text-muted-foreground">
-                   If you have a rebate or coupon, enter the dollar amount above. We'll apply it to your estimate.
+                   If you have a promo code for a rebate or discount, enter it above. We'll apply it to your estimate.
                  </p>
                  <div className="flex gap-4">
                    <Button 
-                    onClick={() => handleSelect("0")} 
+                    onClick={() => handleSelect("")} 
                     variant="outline" 
                     className="flex-1 h-12 text-base"
                    >
@@ -212,7 +210,7 @@ export function Quiz({ onComplete }: QuizProps) {
                     className="flex-1 h-12 text-base bg-accent hover:bg-accent/90"
                     disabled={!rebateInput}
                    >
-                     Apply Rebate
+                     Apply Code
                    </Button>
                  </div>
                </div>

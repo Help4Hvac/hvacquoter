@@ -72,6 +72,14 @@ const DEALER_COSTS: Record<string, Record<string, Record<string, SystemData>>> =
   }
 };
 
+// --- Promo Code Logic ---
+const PROMO_CODES: Record<string, number> = {
+  'SWITCH2ELECTRIC': 500,
+  'IAQBUNDLE': 750,
+  'FASTTRACK': 500,
+  'FULLSYSTEM': 1000
+};
+
 // --- Calculation Logic ---
 
 const calculateRetail = (dealerCost: number, size: string) => {
@@ -118,20 +126,27 @@ const getPricing = (priority: string, size: string, systemType: string, rebate: 
   const dealerCost = systemData.cost;
   
   // Calculate Silver Base Price
-  let silverPrice = calculateRetail(dealerCost, normalizedSize);
+  const baseSilverPrice = calculateRetail(dealerCost, normalizedSize);
   
-  // Apply Rebate
-  if (rebate > 0) {
-    silverPrice = Math.max(dealerCost + 500, silverPrice - rebate); // Ensure we don't go below cost + buffer
-  }
-
   // Calculate Gold Range
-  let goldMin = silverPrice + OFFSET_GOLD_MIN;
-  let goldMax = silverPrice + OFFSET_GOLD_MAX;
+  const baseGoldMin = baseSilverPrice + OFFSET_GOLD_MIN;
+  const baseGoldMax = baseSilverPrice + OFFSET_GOLD_MAX;
   
   // Calculate Platinum Range
-  let platinumMin = silverPrice + OFFSET_PLATINUM_MIN;
-  let platinumMax = silverPrice + OFFSET_PLATINUM_MAX;
+  const basePlatinumMin = baseSilverPrice + OFFSET_PLATINUM_MIN;
+  const basePlatinumMax = baseSilverPrice + OFFSET_PLATINUM_MAX;
+  
+  // Apply Rebate Logic (Cost Floor Check)
+  // We ensure the price doesn't drop below Dealer Cost + $500 buffer
+  const costFloor = dealerCost + 500;
+
+  const applyRebate = (price: number) => Math.max(costFloor, price - rebate);
+
+  const silverPrice = applyRebate(baseSilverPrice);
+  const goldMin = applyRebate(baseGoldMin);
+  const goldMax = applyRebate(baseGoldMax);
+  const platinumMin = applyRebate(basePlatinumMin);
+  const platinumMax = applyRebate(basePlatinumMax);
   
   // Monthly Estimates (approx 1.5% of total)
   const getMonthly = (total: number) => Math.round(total * 0.015);
@@ -156,10 +171,12 @@ export function Results({ onSelect, quizData }: ResultsProps) {
   const priority = quizData.priority || 'value';
   const size = quizData.size || '3ton';
   const systemType = quizData.systemType || 'split'; 
-  const rebateRaw = parseInt(quizData.rebate || "0", 10);
+  const promoCode = (quizData.rebate || "").toUpperCase().replace(/\s+/g, '');
   
-  // Cap rebate at 1000
-  const rebate = isNaN(rebateRaw) ? 0 : Math.min(rebateRaw, 1000);
+  // Lookup Rebate from Promo Code
+  let rebate = PROMO_CODES[promoCode] || 0;
+  // Cap rebate at 1000 (though max in map is 1000 anyway, good for safety)
+  rebate = Math.min(rebate, 1000);
 
   const pricing = getPricing(priority, size, systemType, rebate);
   
@@ -245,7 +262,7 @@ export function Results({ onSelect, quizData }: ResultsProps) {
           {rebate > 0 && (
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-4 py-1 text-base font-medium">
                <Tag className="w-4 h-4 mr-2 inline-block" />
-               Includes ${rebate} Rebate Applied
+               Includes ${rebate} rebate from promo code: {promoCode}
             </Badge>
           )}
         </motion.div>
