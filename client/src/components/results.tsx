@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Check, Info, Star, Zap, ShieldCheck, ThermometerSun } from "lucide-react";
+import { Check, Info, Star, Zap, ShieldCheck, ThermometerSun, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -89,7 +89,7 @@ const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
 };
 
-const getPricing = (priority: string, size: string, systemType: string) => {
+const getPricing = (priority: string, size: string, systemType: string, rebate: number) => {
   const isBudget = priority === 'budget';
   const brand = isBudget ? 'ameristar' : 'amstd';
   
@@ -118,15 +118,20 @@ const getPricing = (priority: string, size: string, systemType: string) => {
   const dealerCost = systemData.cost;
   
   // Calculate Silver Base Price
-  const silverPrice = calculateRetail(dealerCost, normalizedSize);
+  let silverPrice = calculateRetail(dealerCost, normalizedSize);
   
+  // Apply Rebate
+  if (rebate > 0) {
+    silverPrice = Math.max(dealerCost + 500, silverPrice - rebate); // Ensure we don't go below cost + buffer
+  }
+
   // Calculate Gold Range
-  const goldMin = silverPrice + OFFSET_GOLD_MIN;
-  const goldMax = silverPrice + OFFSET_GOLD_MAX;
+  let goldMin = silverPrice + OFFSET_GOLD_MIN;
+  let goldMax = silverPrice + OFFSET_GOLD_MAX;
   
   // Calculate Platinum Range
-  const platinumMin = silverPrice + OFFSET_PLATINUM_MIN;
-  const platinumMax = silverPrice + OFFSET_PLATINUM_MAX;
+  let platinumMin = silverPrice + OFFSET_PLATINUM_MIN;
+  let platinumMax = silverPrice + OFFSET_PLATINUM_MAX;
   
   // Monthly Estimates (approx 1.5% of total)
   const getMonthly = (total: number) => Math.round(total * 0.015);
@@ -151,8 +156,12 @@ export function Results({ onSelect, quizData }: ResultsProps) {
   const priority = quizData.priority || 'value';
   const size = quizData.size || '3ton';
   const systemType = quizData.systemType || 'split'; 
+  const rebateRaw = parseInt(quizData.rebate || "0", 10);
   
-  const pricing = getPricing(priority, size, systemType);
+  // Cap rebate at 1000
+  const rebate = isNaN(rebateRaw) ? 0 : Math.min(rebateRaw, 1000);
+
+  const pricing = getPricing(priority, size, systemType, rebate);
   
   const sizeDisplay = size.replace('ton', ' Ton');
   let systemDisplay = 'Split System';
@@ -230,9 +239,15 @@ export function Results({ onSelect, quizData }: ResultsProps) {
           <h2 className="text-3xl md:text-4xl font-heading font-bold text-primary mb-4">
             Your Custom Comfort Solutions
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-4">
             Based on your <strong>{systemDisplay}</strong> ({sizeDisplay}) and preference for <strong>{priority === 'budget' ? 'lowest upfront cost' : priority === 'value' ? 'best value' : 'maximum performance'}</strong>, here are our recommended installation packages.
           </p>
+          {rebate > 0 && (
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-4 py-1 text-base font-medium">
+               <Tag className="w-4 h-4 mr-2 inline-block" />
+               Includes ${rebate} Rebate Applied
+            </Badge>
+          )}
         </motion.div>
       </div>
 

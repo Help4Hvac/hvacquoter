@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Home, Flame, AlertTriangle, DollarSign, Thermometer, Zap, CheckCircle2, Building2, Building, Box, Settings2, Gauge } from "lucide-react";
+import { Home, Flame, AlertTriangle, DollarSign, Thermometer, Zap, CheckCircle2, Building2, Building, Box, Settings2, Gauge, Tag } from "lucide-react";
 
 import ranchImage from "@assets/generated_images/single_story_ranch_house_exterior.png";
 import twoStoryImage from "@assets/generated_images/two_story_colonial_house_exterior.png";
@@ -93,12 +94,21 @@ const steps = [
     ],
     layout: "list",
   },
+  {
+    id: "rebate",
+    question: "Do you have a rebate or discount code?",
+    image: familyImage,
+    type: "input",
+    options: [], 
+    layout: "center"
+  }
 ];
 
 export function Quiz({ onComplete }: QuizProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [direction, setDirection] = useState(0);
+  const [rebateInput, setRebateInput] = useState("");
 
   const handleSelect = (value: string) => {
     const newAnswers = { ...answers, [steps[currentStep].id]: value };
@@ -110,6 +120,13 @@ export function Quiz({ onComplete }: QuizProps) {
     } else {
       onComplete(newAnswers);
     }
+  };
+
+  const handleRebateSubmit = () => {
+    // If input is empty, just proceed with "0" or empty
+    // If it's a number, save it
+    const value = rebateInput.trim() || "0";
+    handleSelect(value);
   };
 
   const step = steps[currentStep];
@@ -166,65 +183,100 @@ export function Quiz({ onComplete }: QuizProps) {
               {step.question}
             </h2>
 
-            <div className={`grid gap-4 ${step.layout === 'grid' ? 'grid-cols-2' : 'grid-cols-1'}`}>
-              {step.options.map((option) => {
-                const Icon = option.icon;
-                const isSelected = answers[step.id] === option.id;
-                
-                if (step.layout === 'grid' && 'image' in option) {
-                  // Card style for house types
-                   return (
+            {step.type === 'input' ? (
+               <div className="space-y-6">
+                 <div className="relative">
+                   <Tag className="absolute left-3 top-3 text-muted-foreground" />
+                   <Input 
+                    type="number" 
+                    placeholder="Enter rebate amount (e.g. 500)" 
+                    className="pl-10 h-12 text-lg"
+                    value={rebateInput}
+                    onChange={(e) => setRebateInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleRebateSubmit()}
+                   />
+                 </div>
+                 <p className="text-sm text-muted-foreground">
+                   If you have a rebate or coupon, enter the dollar amount above. We'll apply it to your estimate.
+                 </p>
+                 <div className="flex gap-4">
+                   <Button 
+                    onClick={() => handleSelect("0")} 
+                    variant="outline" 
+                    className="flex-1 h-12 text-base"
+                   >
+                     I don't have one
+                   </Button>
+                   <Button 
+                    onClick={handleRebateSubmit} 
+                    className="flex-1 h-12 text-base bg-accent hover:bg-accent/90"
+                    disabled={!rebateInput}
+                   >
+                     Apply Rebate
+                   </Button>
+                 </div>
+               </div>
+            ) : (
+              <div className={`grid gap-4 ${step.layout === 'grid' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                {step.options.map((option) => {
+                  const Icon = option.icon;
+                  const isSelected = answers[step.id] === option.id;
+                  
+                  if (step.layout === 'grid' && 'image' in option) {
+                    // Card style for house types
+                    return (
+                      <button
+                        key={option.id}
+                        onClick={() => handleSelect(option.id)}
+                        className={`
+                          group relative flex flex-col items-center text-center p-0 rounded-xl border-2 overflow-hidden transition-all duration-200 h-full
+                          ${isSelected 
+                            ? "border-accent ring-1 ring-accent" 
+                            : "border-border hover:border-primary/50 hover:shadow-md"}
+                        `}
+                        data-testid={`quiz-option-${option.id}`}
+                      >
+                        <div className="w-full h-32 overflow-hidden">
+                          <img src={option.image} alt={option.label} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        </div>
+                        <div className={`w-full p-4 ${isSelected ? "bg-accent text-white" : "bg-card text-foreground"}`}>
+                          <span className="font-semibold text-sm md:text-base block">
+                            {option.label}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  }
+
+                  // List style for other questions
+                  return (
                     <button
                       key={option.id}
                       onClick={() => handleSelect(option.id)}
                       className={`
-                        group relative flex flex-col items-center text-center p-0 rounded-xl border-2 overflow-hidden transition-all duration-200 h-full
+                        group relative flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all duration-200
                         ${isSelected 
-                          ? "border-accent ring-1 ring-accent" 
-                          : "border-border hover:border-primary/50 hover:shadow-md"}
+                          ? "border-accent bg-accent/5 ring-1 ring-accent" 
+                          : "border-border hover:border-primary/30 hover:bg-secondary/50"}
                       `}
                       data-testid={`quiz-option-${option.id}`}
                     >
-                      <div className="w-full h-32 overflow-hidden">
-                        <img src={option.image} alt={option.label} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <div className={`
+                        p-3 rounded-lg transition-colors duration-200
+                        ${isSelected ? "bg-accent text-white" : "bg-secondary text-muted-foreground group-hover:text-primary"}
+                      `}>
+                        <Icon size={24} strokeWidth={1.5} />
                       </div>
-                      <div className={`w-full p-4 ${isSelected ? "bg-accent text-white" : "bg-card text-foreground"}`}>
-                        <span className="font-semibold text-sm md:text-base block">
+                      <div>
+                        <span className={`font-semibold text-lg block ${isSelected ? "text-foreground" : "text-foreground/80"}`}>
                           {option.label}
                         </span>
                       </div>
                     </button>
                   );
-                }
-
-                // List style for other questions
-                return (
-                  <button
-                    key={option.id}
-                    onClick={() => handleSelect(option.id)}
-                    className={`
-                      group relative flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all duration-200
-                      ${isSelected 
-                        ? "border-accent bg-accent/5 ring-1 ring-accent" 
-                        : "border-border hover:border-primary/30 hover:bg-secondary/50"}
-                    `}
-                    data-testid={`quiz-option-${option.id}`}
-                  >
-                    <div className={`
-                      p-3 rounded-lg transition-colors duration-200
-                      ${isSelected ? "bg-accent text-white" : "bg-secondary text-muted-foreground group-hover:text-primary"}
-                    `}>
-                      <Icon size={24} strokeWidth={1.5} />
-                    </div>
-                    <div>
-                      <span className={`font-semibold text-lg block ${isSelected ? "text-foreground" : "text-foreground/80"}`}>
-                        {option.label}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                })}
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
