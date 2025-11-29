@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Home, Flame, AlertTriangle, DollarSign, Thermometer, Zap, CheckCircle2, Building2, Building, Box, Settings2, Gauge, Tag } from "lucide-react";
+import { Home, Flame, AlertTriangle, DollarSign, Thermometer, Zap, CheckCircle2, Building2, Building, Box, Settings2, Gauge, Tag, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 import ranchImage from "@assets/generated_images/single_story_ranch_house_exterior.png";
 import twoStoryImage from "@assets/generated_images/two_story_colonial_house_exterior.png";
@@ -109,6 +110,8 @@ export function Quiz({ onComplete }: QuizProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [direction, setDirection] = useState(0);
   const [rebateInput, setRebateInput] = useState("");
+  const [isValidating, setIsValidating] = useState(false);
+  const { toast } = useToast();
 
   const handleSelect = (value: string) => {
     const newAnswers = { ...answers, [steps[currentStep].id]: value };
@@ -122,9 +125,42 @@ export function Quiz({ onComplete }: QuizProps) {
     }
   };
 
-  const handleRebateSubmit = () => {
-    const value = rebateInput.trim() || "";
-    handleSelect(value);
+  const handleRebateSubmit = async () => {
+    const value = rebateInput.trim();
+    
+    if (!value) {
+      handleSelect("");
+      return;
+    }
+
+    setIsValidating(true);
+    try {
+      const response = await fetch(`/api/promoCodes?code=${encodeURIComponent(value)}`);
+      
+      if (!response.ok) {
+        throw new Error("Invalid promo code");
+      }
+
+      const data = await response.json();
+      
+      toast({
+        title: "Promo Code Applied!",
+        description: `Code validated! Includes a $${data.rebate} rebate.`,
+        className: "bg-green-50 border-green-200 text-green-800",
+      });
+
+      // Pass the validated code
+      handleSelect(value);
+      
+    } catch (error) {
+      toast({
+        title: "Invalid Code",
+        description: "This promo code is either invalid or expired.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsValidating(false);
+    }
   };
 
   const step = steps[currentStep];
@@ -202,15 +238,23 @@ export function Quiz({ onComplete }: QuizProps) {
                     onClick={() => handleSelect("")} 
                     variant="outline" 
                     className="flex-1 h-12 text-base"
+                    disabled={isValidating}
                    >
                      I don't have one
                    </Button>
                    <Button 
                     onClick={handleRebateSubmit} 
                     className="flex-1 h-12 text-base bg-accent hover:bg-accent/90"
-                    disabled={!rebateInput}
+                    disabled={!rebateInput || isValidating}
                    >
-                     Apply Code
+                     {isValidating ? (
+                       <>
+                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                         Validating...
+                       </>
+                     ) : (
+                       "Apply Code"
+                     )}
                    </Button>
                  </div>
                </div>

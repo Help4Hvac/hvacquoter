@@ -10,6 +10,15 @@ export async function registerRoutes(
   
   // Promo Code Routes
   app.get("/api/promoCodes", async (req, res) => {
+    const code = req.query.code as string;
+    if (code) {
+      const promo = await storage.getPromoCodeByCode(code);
+      if (!promo || !promo.isActive) {
+        return res.status(404).json({ message: "Invalid or inactive promo code" });
+      }
+      return res.json({ rebate: promo.amount, code: promo.code });
+    }
+
     const codes = await storage.getPromoCodes();
     res.json(codes);
   });
