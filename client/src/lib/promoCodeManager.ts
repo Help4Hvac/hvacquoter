@@ -1,17 +1,41 @@
 
+export interface PromoCode {
+  code: string;
+  amount: number;
+  description: string;
+  isActive: boolean;
+}
+
 // Initial Promo Codes
-const DEFAULT_CODES: Record<string, number> = {
-  "Switch2Electric": 500,
-  "IAQBundle": 750,
-  "FastTrack": 500,
-  "FullSystem": 1000
+const DEFAULT_CODES: Record<string, PromoCode> = {
+  "Switch2Electric": {
+    code: "Switch2Electric",
+    amount: 500,
+    description: "Rebate for switching to electric heat pump",
+    isActive: true
+  },
+  "IAQBundle": {
+    code: "IAQBundle",
+    amount: 750,
+    description: "Indoor Air Quality package discount",
+    isActive: true
+  },
+  "FastTrack": {
+    code: "FastTrack",
+    amount: 500,
+    description: "Expedited installation discount",
+    isActive: true
+  },
+  "FullSystem": {
+    code: "FullSystem",
+    amount: 1000,
+    description: "Complete system replacement rebate",
+    isActive: true
+  }
 };
 
-// In-memory store (initialized with defaults)
-// Note: In a real app, this might come from an API or persistent store.
-// Since we are in a frontend prototype, we'll just use a module-level variable
-// which persists as long as the page/module isn't reloaded.
-let promoCodes: Record<string, number> = { ...DEFAULT_CODES };
+// In-memory store
+let promoCodes: Record<string, PromoCode> = { ...DEFAULT_CODES };
 
 const MAX_REBATE = 1000;
 
@@ -23,21 +47,19 @@ const normalizeCode = (code: string): string => {
 };
 
 /**
- * Returns rebate amount if code exists, else 0
+ * Returns rebate amount if code exists and is active, else 0
  */
 export const getRebate = (code: string): number => {
   if (!code) return 0;
-  
-  // We need to check against normalized keys
-  // To support case-insensitivity, we iterate or maintain a normalized map.
-  // For simplicity with the requirement to store exact keys in JSON,
-  // we'll normalize the input and check against normalized keys of our store.
   
   const normalizedInput = normalizeCode(code);
   
   for (const key of Object.keys(promoCodes)) {
     if (normalizeCode(key) === normalizedInput) {
-      return promoCodes[key];
+      const promo = promoCodes[key];
+      if (promo.isActive) {
+        return promo.amount;
+      }
     }
   }
   
@@ -45,12 +67,27 @@ export const getRebate = (code: string): number => {
 };
 
 /**
- * Adds new code (cap at $1000)
+ * Adds new promo code
  */
-export const addPromoCode = (code: string, amount: number): void => {
+export const addPromoCode = (code: string, amount: number, description: string = ""): void => {
   if (!code) return;
+  // Check if exists
+  const normalizedInput = normalizeCode(code);
+  const existingKey = Object.keys(promoCodes).find(k => normalizeCode(k) === normalizedInput);
+  
+  if (existingKey) {
+    // If exists, just update it? Or throw error? For simplicity, let's update.
+    updatePromoCode(existingKey, amount, description);
+    return;
+  }
+
   const cappedAmount = Math.min(Math.max(0, amount), MAX_REBATE);
-  promoCodes[code] = cappedAmount;
+  promoCodes[code] = {
+    code,
+    amount: cappedAmount,
+    description,
+    isActive: true
+  };
 };
 
 /**
@@ -59,7 +96,6 @@ export const addPromoCode = (code: string, amount: number): void => {
 export const removePromoCode = (code: string): void => {
   if (!code) return;
   
-  // Find the exact key to delete
   const normalizedInput = normalizeCode(code);
   const keyToDelete = Object.keys(promoCodes).find(k => normalizeCode(k) === normalizedInput);
   
@@ -69,23 +105,40 @@ export const removePromoCode = (code: string): void => {
 };
 
 /**
- * Edits rebate amount (cap at $1000)
+ * Edits rebate amount and description
  */
-export const updatePromoCode = (code: string, amount: number): void => {
-  // This is essentially the same as add in this simple key-value store implementation
-  // but implies the code should already exist.
+export const updatePromoCode = (code: string, amount: number, description?: string): void => {
   const normalizedInput = normalizeCode(code);
   const existingKey = Object.keys(promoCodes).find(k => normalizeCode(k) === normalizedInput);
   
   if (existingKey) {
     const cappedAmount = Math.min(Math.max(0, amount), MAX_REBATE);
-    promoCodes[existingKey] = cappedAmount;
+    promoCodes[existingKey] = {
+      ...promoCodes[existingKey],
+      amount: cappedAmount,
+      description: description !== undefined ? description : promoCodes[existingKey].description
+    };
   }
 };
 
 /**
- * Debug/Testing utility to see current codes
+ * Toggles active status
  */
-export const getAllPromoCodes = () => {
-  return { ...promoCodes };
+export const togglePromoStatus = (code: string): void => {
+  const normalizedInput = normalizeCode(code);
+  const existingKey = Object.keys(promoCodes).find(k => normalizeCode(k) === normalizedInput);
+  
+  if (existingKey) {
+    promoCodes[existingKey] = {
+      ...promoCodes[existingKey],
+      isActive: !promoCodes[existingKey].isActive
+    };
+  }
+};
+
+/**
+ * Get all codes for admin dashboard
+ */
+export const getAllPromoCodes = (): PromoCode[] => {
+  return Object.values(promoCodes);
 };
