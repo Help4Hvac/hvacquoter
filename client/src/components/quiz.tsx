@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Home, Flame, AlertTriangle, DollarSign, Thermometer, Zap, CheckCircle2, Building2, Building } from "lucide-react";
+import { Home, Flame, AlertTriangle, DollarSign, Thermometer, Zap, CheckCircle2, Building2, Building, Box, Settings2 } from "lucide-react";
 
 import ranchImage from "@assets/generated_images/single_story_ranch_house_exterior.png";
 import twoStoryImage from "@assets/generated_images/two_story_colonial_house_exterior.png";
@@ -13,12 +13,25 @@ import condoImage from "@assets/generated_images/modern_condo_building_exterior.
 import hvacImage from "@assets/generated_images/modern_clean_hvac_unit_in_utility_room.png";
 import familyImage from "@assets/generated_images/happy_family_relaxing_on_couch_comfort.png";
 import heroImage from "@assets/generated_images/modern_bright_living_room_with_subtle_hvac_vent.png";
+import splitImage from "@assets/generated_images/hvac_split_system_diagram_showing_outdoor_and_indoor_units.png";
+import packageImage from "@assets/generated_images/hvac_package_unit_exterior.png";
+
 
 interface QuizProps {
   onComplete: (data: any) => void;
 }
 
 const steps = [
+  {
+    id: "systemType",
+    question: "What type of HVAC system do you currently have?",
+    image: splitImage,
+    options: [
+      { id: "split", label: "Split System (Outdoor Unit + Indoor Unit)", icon: Settings2, image: splitImage },
+      { id: "package", label: "Package Unit (Single Large Outdoor Unit)", icon: Box, image: packageImage },
+    ],
+    layout: "grid",
+  },
   {
     id: "type",
     question: "What type of house do you have?",
@@ -44,11 +57,11 @@ const steps = [
     layout: "list",
   },
   {
-    id: "system",
-    question: "What type of system do you currently have?",
+    id: "currentSystem",
+    question: "What is your heating source?",
     image: hvacImage,
     options: [
-      { id: "furnace", label: "Gas Furnace & AC", icon: Flame },
+      { id: "furnace", label: "Gas Furnace", icon: Flame },
       { id: "heatpump", label: "Electric Heat Pump", icon: Zap },
       { id: "boiler", label: "Boiler / Radiators", icon: Thermometer },
       { id: "unknown", label: "I'm not sure", icon: AlertTriangle },
@@ -98,12 +111,6 @@ export function Quiz({ onComplete }: QuizProps) {
   };
 
   const step = steps[currentStep];
-  
-  // Determine which image to show on the left side
-  // For the first step, we might want a generic one or the one corresponding to the selection if we wanted to get fancy, 
-  // but let's stick to the step image.
-  // However, for the House Type question, the user asked for images ABOVE the label for the options.
-  // So the main image on the left can just be the ranch image or a generic exterior.
 
   return (
     <div className="w-full max-w-6xl mx-auto bg-card rounded-2xl shadow-xl overflow-hidden border border-border/50 grid md:grid-cols-2 min-h-[500px]">

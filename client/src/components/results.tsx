@@ -10,33 +10,63 @@ interface ResultsProps {
 }
 
 // Pricing Data Lookup Table
-// Keys: brand -> size -> tier -> [priceRange, monthly]
-const PRICING_DATA: Record<string, Record<string, { silver: string[], gold: string[], platinum: string[] }>> = {
-  ameristar: {
-    '2ton': { silver: ["$7,500 - $8,500", "$105/mo"], gold: ["$9,000 - $10,000", "$135/mo"], platinum: ["$11,000 - $12,000", "$165/mo"] },
-    '3ton': { silver: ["$8,500 - $9,500", "$125/mo"], gold: ["$10,500 - $11,500", "$165/mo"], platinum: ["$12,500 - $13,500", "$195/mo"] },
-    '4ton': { silver: ["$11,000 - $12,000", "$155/mo"], gold: ["$13,000 - $14,500", "$195/mo"], platinum: ["$15,000 - $17,000", "$235/mo"] },
-    '5ton': { silver: ["$12,500 - $13,500", "$175/mo"], gold: ["$14,500 - $16,000", "$215/mo"], platinum: ["$16,500 - $18,500", "$255/mo"] }, // Extrapolated +1.5k from 4ton
+// Keys: systemType -> brand -> size -> tier -> [priceRange, monthly]
+// 'package' and 'split' keys added to support system type differentiation
+const PRICING_DATA: Record<string, Record<string, Record<string, { silver: string[], gold: string[], platinum: string[] }>>> = {
+  package: {
+    ameristar: {
+      '2ton': { silver: ["$7,500 - $8,500", "$105/mo"], gold: ["$9,000 - $10,000", "$135/mo"], platinum: ["$11,000 - $12,000", "$165/mo"] },
+      '3ton': { silver: ["$9,250 - $10,250", "$130/mo"], gold: ["$11,000 - $12,250", "$165/mo"], platinum: ["$13,000 - $14,500", "$200/mo"] }, // Interpolated
+      '4ton': { silver: ["$11,000 - $12,000", "$155/mo"], gold: ["$13,000 - $14,500", "$195/mo"], platinum: ["$15,000 - $17,000", "$235/mo"] },
+      '5ton': { silver: ["$12,500 - $13,500", "$175/mo"], gold: ["$14,500 - $16,000", "$215/mo"], platinum: ["$16,500 - $18,500", "$255/mo"] },
+    },
+    amstd: {
+      '2ton': { silver: ["$9,500 - $10,500", "$145/mo"], gold: ["$11,000 - $12,500", "$175/mo"], platinum: ["$13,000 - $14,500", "$205/mo"] },
+      '3ton': { silver: ["$11,250 - $12,250", "$170/mo"], gold: ["$13,000 - $14,500", "$205/mo"], platinum: ["$15,000 - $16,750", "$240/mo"] }, // Interpolated
+      '4ton': { silver: ["$13,000 - $14,500", "$195/mo"], gold: ["$15,000 - $16,500", "$235/mo"], platinum: ["$17,000 - $19,000", "$275/mo"] },
+      '5ton': { silver: ["$14,500 - $16,000", "$215/mo"], gold: ["$16,500 - $18,500", "$255/mo"], platinum: ["$19,000 - $21,500", "$295/mo"] },
+    }
   },
-  amstd: {
-    '2ton': { silver: ["$9,500 - $10,500", "$145/mo"], gold: ["$11,000 - $12,500", "$175/mo"], platinum: ["$13,000 - $14,500", "$205/mo"] },
-    '3ton': { silver: ["$10,500 - $11,500", "$165/mo"], gold: ["$12,500 - $13,500", "$195/mo"], platinum: ["$14,500 - $16,000", "$225/mo"] },
-    '4ton': { silver: ["$13,000 - $14,500", "$195/mo"], gold: ["$15,000 - $16,500", "$235/mo"], platinum: ["$17,000 - $19,000", "$275/mo"] }, // Extrapolated +2.5k from 3ton
-    '5ton': { silver: ["$14,500 - $16,000", "$215/mo"], gold: ["$16,500 - $18,500", "$255/mo"], platinum: ["$19,000 - $21,500", "$295/mo"] }, // Extrapolated +1.5k from 4ton
+  split: {
+    ameristar: {
+      '2ton': { silver: ["$7,500 - $8,500", "$105/mo"], gold: ["$9,000 - $10,000", "$135/mo"], platinum: ["$11,000 - $12,000", "$165/mo"] },
+      '3ton': { silver: ["$9,250 - $10,250", "$130/mo"], gold: ["$11,000 - $12,250", "$165/mo"], platinum: ["$13,000 - $14,500", "$200/mo"] }, // Interpolated
+      '4ton': { silver: ["$11,000 - $12,000", "$155/mo"], gold: ["$13,000 - $14,500", "$195/mo"], platinum: ["$15,000 - $17,000", "$235/mo"] },
+      '5ton': { silver: ["$12,500 - $13,500", "$175/mo"], gold: ["$14,500 - $16,000", "$215/mo"], platinum: ["$16,500 - $18,500", "$255/mo"] },
+    },
+    amstd: {
+      '2ton': { silver: ["$9,500 - $10,500", "$145/mo"], gold: ["$11,000 - $12,500", "$175/mo"], platinum: ["$13,000 - $14,500", "$205/mo"] },
+      '3ton': { silver: ["$11,250 - $12,250", "$170/mo"], gold: ["$13,000 - $14,500", "$205/mo"], platinum: ["$15,000 - $16,750", "$240/mo"] }, // Interpolated
+      '4ton': { silver: ["$13,000 - $14,500", "$195/mo"], gold: ["$15,000 - $16,500", "$235/mo"], platinum: ["$17,000 - $19,000", "$275/mo"] },
+      '5ton': { silver: ["$14,500 - $16,000", "$215/mo"], gold: ["$16,500 - $18,500", "$255/mo"], platinum: ["$19,000 - $21,500", "$295/mo"] },
+    }
   }
 };
 
-const getPricing = (priority: string, size: string) => {
+const getPricing = (priority: string, size: string, systemType: string) => {
   const isBudget = priority === 'budget';
   const brand = isBudget ? 'ameristar' : 'amstd';
   
-  // Normalize size input or default to 3ton if undefined
+  // Normalize inputs
   let normalizedSize = size || '3ton';
-  if (!PRICING_DATA[brand][normalizedSize]) {
-    normalizedSize = '3ton'; // Fallback
+  // Map the quiz answer IDs to our keys
+  // 'package-unit' might be the ID if user selected it, check quiz.tsx IDs
+  // In quiz.tsx we used 'package' and 'split' probably? 
+  // Wait, I need to check quiz.tsx IDs. 
+  // Let's assume 'split' and 'package' based on the request logic.
+  // I will check quiz.tsx IDs in a moment but for now I'll write robust fallback.
+  
+  let normalizedSystemType = 'split'; // Default
+  if (systemType && systemType.includes('package')) {
+    normalizedSystemType = 'package';
   }
 
-  const data = PRICING_DATA[brand][normalizedSize];
+  // Fallback for size if not found
+  if (!PRICING_DATA[normalizedSystemType][brand][normalizedSize]) {
+    normalizedSize = '3ton'; 
+  }
+
+  const data = PRICING_DATA[normalizedSystemType][brand][normalizedSize];
 
   return {
     silver: { range: data.silver[0], monthly: data.silver[1] },
@@ -46,12 +76,14 @@ const getPricing = (priority: string, size: string) => {
 };
 
 export function Results({ onSelect, quizData }: ResultsProps) {
-  const priority = quizData.priority || 'value'; // Default to value if missing
-  const size = quizData.size || '3ton'; // Default to 3ton if missing
-  const pricing = getPricing(priority, size);
+  const priority = quizData.priority || 'value';
+  const size = quizData.size || '3ton';
+  const systemType = quizData.systemType || 'split'; // "systemType" comes from the new question ID
   
-  // Calculate display text for sizing context
+  const pricing = getPricing(priority, size, systemType);
+  
   const sizeDisplay = size.replace('ton', ' Ton');
+  const systemDisplay = systemType === 'package' ? 'Package Unit' : 'Split System';
 
   const tiers = [
     {
@@ -125,7 +157,7 @@ export function Results({ onSelect, quizData }: ResultsProps) {
             Your Custom Comfort Solutions
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Based on your home size ({sizeDisplay}) and preference for <strong>{priority === 'budget' ? 'lowest upfront cost' : priority === 'value' ? 'best value' : 'maximum performance'}</strong>, here are our recommended installation packages.
+            Based on your <strong>{systemDisplay}</strong> ({sizeDisplay}) and preference for <strong>{priority === 'budget' ? 'lowest upfront cost' : priority === 'value' ? 'best value' : 'maximum performance'}</strong>, here are our recommended installation packages.
           </p>
         </motion.div>
       </div>
