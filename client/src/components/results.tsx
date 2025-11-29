@@ -131,16 +131,30 @@ const getPricing = (priority: string, size: string, systemType: string, rebate: 
   const basePlatinumMax = baseSilverPrice + OFFSET_PLATINUM_MAX;
   
   // Apply Rebate Logic (Cost Floor Check)
-  // We ensure the price doesn't drop below Dealer Cost + $500 buffer
-  const costFloor = dealerCost + 500;
+  // Formula: AdjustedRetail = Max(Retail - Min(Rebate, 1000), DealerCost)
+  
+  const applyRebate = (retailPrice: number, rebateAmount: number) => {
+    const cappedRebate = Math.min(rebateAmount, 1000);
+    return Math.max(retailPrice - cappedRebate, dealerCost);
+  };
 
-  const applyRebate = (price: number) => Math.max(costFloor, price - rebate);
+  const silverPrice = applyRebate(baseSilverPrice, rebate);
+  
+  // Gold & Platinum use offset from ADJUSTED Silver (based on user request interpretation: "Gold = Silver + Offset")
+  // However, typical pricing logic usually adds offset to base then rebates. 
+  // User request says: "Gold = Silver + $1,500–$2,000 - rebate" -> wait, "Silver = Final Price" (which is already rebated).
+  // User formula: "Gold = Silver + $1,500... - rebate" -> This would double dip rebate if Silver is already rebated?
+  // Let's re-read carefully: "Silver = Final Price" (which is `retail - rebate`).
+  // "Gold = Silver + 1500 - rebate".
+  // If Silver is already rebated, then Gold = (Retail - Rebate) + 1500 - Rebate. That subtracts rebate twice.
+  // LIKELY INTENT: Gold = (BaseSilver + 1500) - Rebate.
+  // Which is what I have below: calculate base, then apply rebate function.
+  
+  const goldMin = applyRebate(baseSilverPrice + OFFSET_GOLD_MIN, rebate);
+  const goldMax = applyRebate(baseSilverPrice + OFFSET_GOLD_MAX, rebate);
+  const platinumMin = applyRebate(baseSilverPrice + OFFSET_PLATINUM_MIN, rebate);
+  const platinumMax = applyRebate(baseSilverPrice + OFFSET_PLATINUM_MAX, rebate);
 
-  const silverPrice = applyRebate(baseSilverPrice);
-  const goldMin = applyRebate(baseGoldMin);
-  const goldMax = applyRebate(baseGoldMax);
-  const platinumMin = applyRebate(basePlatinumMin);
-  const platinumMax = applyRebate(basePlatinumMax);
   
   // Monthly Estimates (approx 1.5% of total)
   const getMonthly = (total: number) => Math.round(total * 0.015);

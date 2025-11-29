@@ -1,0 +1,59 @@
+// promoCodes.js (Express Router)
+const express = require('express');
+const router = express.Router();
+
+// Example in-memory store (replace with DB queries)
+let promoCodes = [
+  { id: 1, code: "Switch2Electric", rebate: 500, description: "Switch from gas to electric", status: "Active" },
+  { id: 2, code: "IAQBundle", rebate: 750, description: "Add IAQ upgrades", status: "Active" }
+];
+
+// GET all promo codes
+router.get('/', (req, res) => {
+  res.json(promoCodes);
+});
+
+// GET promo code by query string
+router.get('/:code', (req, res) => {
+  const code = req.params.code;
+  const promo = promoCodes.find(p => p.code.toLowerCase() === code.toLowerCase() && p.status === "Active");
+  if (promo) {
+    res.json(promo);
+  } else {
+    res.status(404).json({ message: "Promo code not found or inactive" });
+  }
+});
+
+// POST new promo code
+router.post('/', (req, res) => {
+  const { code, rebate, description, status } = req.body;
+  if (rebate > 1000) return res.status(400).json({ message: "Rebate capped at $1000" });
+  const newPromo = { id: promoCodes.length + 1, code, rebate, description, status: status || "Active" };
+  promoCodes.push(newPromo);
+  res.status(201).json(newPromo);
+});
+
+// PUT update promo code
+router.put('/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const promo = promoCodes.find(p => p.id === id);
+  if (!promo) return res.status(404).json({ message: "Promo code not found" });
+
+  const { rebate, description, status } = req.body;
+  if (rebate && rebate > 1000) return res.status(400).json({ message: "Rebate capped at $1000" });
+
+  if (rebate !== undefined) promo.rebate = rebate;
+  if (description !== undefined) promo.description = description;
+  if (status !== undefined) promo.status = status;
+
+  res.json(promo);
+});
+
+// DELETE promo code
+router.delete('/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  promoCodes = promoCodes.filter(p => p.id !== id);
+  res.json({ message: "Promo code deleted successfully" });
+});
+
+module.exports = router;
