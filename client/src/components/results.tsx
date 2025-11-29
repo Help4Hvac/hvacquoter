@@ -6,69 +6,98 @@ import { Badge } from "@/components/ui/badge";
 
 interface ResultsProps {
   onSelect: (tier: string) => void;
+  quizData: Record<string, string>;
 }
 
-const tiers = [
-  {
-    id: "good",
-    name: "Silver Comfort",
-    tagline: "Reliable performance on a budget",
-    priceRange: "$4,800 - $6,500",
-    monthly: "Starting at $89/mo",
-    efficiency: "14 SEER2",
-    warranty: "10-Year Parts",
-    features: [
-      "Single-Stage Compressor",
-      "Standard Sound Levels",
-      "Standard Air Filtration",
-      "Smart Thermostat Compatible",
-    ],
-    color: "bg-slate-100",
-    borderColor: "border-slate-200",
-    buttonColor: "bg-slate-800 hover:bg-slate-900",
-    recommended: false,
-  },
-  {
-    id: "better",
-    name: "Gold Efficiency",
-    tagline: "Perfect balance of comfort & savings",
-    priceRange: "$7,200 - $9,500",
-    monthly: "Starting at $115/mo",
-    efficiency: "16 SEER2",
-    warranty: "10-Year Parts + 2-Year Labor",
-    features: [
-      "Two-Stage Compressor (Even Temps)",
-      "Quiet Operation Technology",
-      "Enhanced Humidity Control",
-      "Wi-Fi Smart Thermostat Included",
-    ],
-    color: "bg-white",
-    borderColor: "border-accent",
-    buttonColor: "bg-accent hover:bg-accent/90",
-    recommended: true,
-  },
-  {
-    id: "best",
-    name: "Platinum Elite",
-    tagline: "Ultimate precision and silence",
-    priceRange: "$10,500 - $14,000",
-    monthly: "Starting at $165/mo",
-    efficiency: "20+ SEER2",
-    warranty: "Lifetime Unit Replacement",
-    features: [
-      "Variable Speed Compressor (Inverter)",
-      "Whisper-Quiet Operation",
-      "Perfect Humidity & Air Quality",
-      "Communicating Smart Zoning Ready",
-    ],
-    color: "bg-slate-50",
-    borderColor: "border-primary/20",
-    buttonColor: "bg-primary hover:bg-primary/90",
-    recommended: false,
-  },
-];
+// Pricing Strategies based on equipment type
+// If priority is "budget", we use Ameristar pricing
+// If priority is "value" or "performance", we use American Standard pricing
+const getPricing = (priority: string) => {
+  const isBudget = priority === 'budget';
+  
+  if (isBudget) {
+    // Ameristar Pricing (Cost ~$3,768)
+    // Margins: Silver 55%, Gold 64%, Platinum 69%
+    return {
+      silver: { range: "$8,500 - $9,500", monthly: "$125/mo" },
+      gold: { range: "$10,500 - $11,500", monthly: "$165/mo" },
+      platinum: { range: "$12,500 - $13,500", monthly: "$195/mo" }
+    };
+  } else {
+    // American Standard Pricing (Cost ~$5,673)
+    // User provided specific ranges
+    return {
+      silver: { range: "$10,500 - $11,500", monthly: "$165/mo" },
+      gold: { range: "$12,500 - $13,500", monthly: "$195/mo" },
+      platinum: { range: "$14,500 - $16,000", monthly: "$225/mo" }
+    };
+  }
+};
 
-export function Results({ onSelect }: ResultsProps) {
+export function Results({ onSelect, quizData }: ResultsProps) {
+  const priority = quizData.priority || 'value'; // Default to value if missing
+  const pricing = getPricing(priority);
+  
+  const tiers = [
+    {
+      id: "good",
+      name: "Silver Comfort",
+      tagline: "Reliable performance on a budget",
+      priceRange: pricing.silver.range,
+      monthly: `Starting at ${pricing.silver.monthly}`,
+      efficiency: "14 SEER2",
+      warranty: "10-Year Parts",
+      features: [
+        "Single-Stage Compressor",
+        "Standard Sound Levels",
+        "Standard Air Filtration",
+        "Smart Thermostat Compatible",
+      ],
+      color: "bg-slate-100",
+      borderColor: "border-slate-200",
+      buttonColor: "bg-slate-800 hover:bg-slate-900",
+      recommended: false,
+    },
+    {
+      id: "better",
+      name: "Gold Efficiency",
+      tagline: "Perfect balance of comfort & savings",
+      priceRange: pricing.gold.range,
+      monthly: `Starting at ${pricing.gold.monthly}`,
+      efficiency: "16 SEER2",
+      warranty: "10-Year Parts + 2-Year Labor",
+      features: [
+        "Two-Stage Compressor (Even Temps)",
+        "Quiet Operation Technology",
+        "Enhanced Humidity Control",
+        "Wi-Fi Smart Thermostat Included",
+      ],
+      color: "bg-white",
+      borderColor: "border-accent",
+      buttonColor: "bg-accent hover:bg-accent/90",
+      recommended: true,
+    },
+    {
+      id: "best",
+      name: "Platinum Elite",
+      tagline: "Ultimate precision and silence",
+      priceRange: pricing.platinum.range,
+      monthly: `Starting at ${pricing.platinum.monthly}`,
+      efficiency: "20+ SEER2",
+      warranty: "Lifetime Unit Replacement",
+      features: [
+        "Variable Speed Compressor (Inverter)",
+        "Whisper-Quiet Operation",
+        "Perfect Humidity & Air Quality",
+        "Communicating Smart Zoning Ready",
+      ],
+      color: "bg-slate-50",
+      borderColor: "border-primary/20",
+      buttonColor: "bg-primary hover:bg-primary/90",
+      recommended: false,
+    },
+  ];
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4">
       <div className="text-center mb-12">
@@ -81,7 +110,7 @@ export function Results({ onSelect }: ResultsProps) {
             Your Custom Comfort Solutions
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Based on your home profile, here are our three recommended installation packages. No hidden fees, just transparent options.
+            Based on your preference for <strong>{priority === 'budget' ? 'lowest upfront cost' : priority === 'value' ? 'best value' : 'maximum performance'}</strong>, here are our recommended installation packages.
           </p>
         </motion.div>
       </div>

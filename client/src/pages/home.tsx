@@ -12,6 +12,7 @@ export default function Home() {
   const [selectedTier, setSelectedTier] = useState<string | undefined>();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [quizData, setQuizData] = useState<Record<string, string>>({});
   
   const quizRef = useRef<HTMLDivElement>(null);
 
@@ -24,6 +25,7 @@ export default function Home() {
 
   const handleQuizComplete = (data: any) => {
     console.log("Quiz Data:", data);
+    setQuizData(data);
     setQuizCompleted(true);
   };
 
@@ -112,7 +114,7 @@ export default function Home() {
                  <Quiz onComplete={handleQuizComplete} />
                </motion.div>
              ) : (
-               <Results onSelect={handleSelectTier} />
+               <Results onSelect={handleSelectTier} quizData={quizData} />
              )}
            </div>
         </div>
