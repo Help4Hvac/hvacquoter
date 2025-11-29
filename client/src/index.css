@@ -28,6 +28,15 @@
   --color-chart-3: hsl(var(--chart-3));
   --color-chart-4: hsl(var(--chart-4));
   --color-chart-5: hsl(var(--chart-5));
+  
+  --color-urgent: hsl(var(--urgent));
+  --color-urgent-foreground: hsl(var(--urgent-foreground));
+  --color-highlight: hsl(var(--highlight));
+  --color-highlight-foreground: hsl(var(--highlight-foreground));
+  --color-trust: hsl(var(--trust));
+  --color-trust-foreground: hsl(var(--trust-foreground));
+  --color-eco: hsl(var(--eco));
+  --color-eco-foreground: hsl(var(--eco-foreground));
 
   --font-sans: 'Inter', sans-serif;
   --font-heading: 'Barlow', sans-serif;
@@ -39,26 +48,26 @@
 }
 
 :root {
-  /* Clean Industrial Theme */
-  /* Primary: Deep Navy Blue */
-  --primary: 215 100% 30%; 
+  /* HVAC Quoter Theme - Neutral/Trust/Urgency */
+  /* Primary: Vibrant Orange (CTA) */
+  --primary: 30 100% 50%; 
   --primary-foreground: 0 0% 100%;
 
   /* Secondary: Cool Gray/Silver */
   --secondary: 210 20% 96%;
   --secondary-foreground: 215 100% 30%;
 
-  /* Accent: Safety Orange / Heat */
-  --accent: 25 95% 53%;
+  /* Accent: Deep Blue (Trust) */
+  --accent: 201 100% 36%;
   --accent-foreground: 0 0% 100%;
 
   /* Backgrounds */
-  --background: 0 0% 100%;
-  --foreground: 215 25% 27%; /* Dark Slate Blue for text */
+  --background: 0 0% 97.6%; /* Soft white #f9f9f9 */
+  --foreground: 0 0% 20%; /* Dark gray #333333 */
 
   /* Cards */
   --card: 0 0% 100%;
-  --card-foreground: 215 25% 27%;
+  --card-foreground: 0 0% 20%;
 
   /* Muted */
   --muted: 210 20% 90%;
@@ -67,21 +76,34 @@
   /* Borders */
   --border: 214 32% 91%;
   --input: 214 32% 91%;
-  --ring: 215 100% 30%;
+  --ring: 30 100% 50%;
 
   /* Radius */
   --radius: 0.5rem;
 
   /* Destructive */
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 98%;
+  --destructive: 356 88% 54%; /* Bold red #e63946 */
+  --destructive-foreground: 0 0% 100%;
+
+  /* Semantic Colors */
+  --urgent: 356 88% 54%; /* Bold red for rebates/urgency */
+  --urgent-foreground: 0 0% 100%;
+  
+  --highlight: 43 100% 56%; /* Bright yellow for seasonal/promos */
+  --highlight-foreground: 0 0% 0%;
+  
+  --trust: 201 100% 36%; /* Deep blue for warranty/trust */
+  --trust-foreground: 0 0% 100%;
+  
+  --eco: 172 55% 40%; /* Calming green for eco-friendly */
+  --eco-foreground: 0 0% 100%;
 
   /* Charts (for future use) */
-  --chart-1: 215 100% 30%;
-  --chart-2: 25 95% 53%;
-  --chart-3: 210 20% 50%;
-  --chart-4: 43 96% 56%;
-  --chart-5: 215 25% 27%;
+  --chart-1: 30 100% 50%;
+  --chart-2: 356 88% 54%;
+  --chart-3: 201 100% 36%;
+  --chart-4: 43 100% 56%;
+  --chart-5: 172 55% 40%;
 }
 
 .dark {
@@ -115,5 +137,27 @@
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading tracking-tight font-bold;
+  }
+}
+
+@layer components {
+  .urgent {
+    @apply bg-urgent text-urgent-foreground;
+  }
+  
+  .highlight {
+    @apply bg-highlight text-highlight-foreground;
+  }
+  
+  .trust {
+    @apply bg-trust text-trust-foreground;
+  }
+  
+  .eco {
+    @apply bg-eco text-eco-foreground;
+  }
+  
+  .cta {
+    @apply bg-primary text-primary-foreground;
   }
 }
