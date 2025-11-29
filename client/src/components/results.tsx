@@ -161,17 +161,21 @@ const getPricing = (priority: string, size: string, systemType: string, rebate: 
 
   return {
     silver: { 
+      price: silverPrice,
       range: `${formatCurrency(silverPrice)} - ${formatCurrency(silverPrice + 500)}`, 
       monthly: `$${getMonthly(silverPrice)}/mo` 
     },
     gold: { 
+      price: goldMin,
       range: `${formatCurrency(goldMin)} - ${formatCurrency(goldMax)}`, 
       monthly: `$${getMonthly(goldMin)}/mo` 
     },
     platinum: { 
+      price: platinumMin,
       range: `${formatCurrency(platinumMin)} - ${formatCurrency(platinumMax)}`, 
       monthly: `$${getMonthly(platinumMin)}/mo` 
-    }
+    },
+    rebateApplied: rebate
   };
 };
 
@@ -279,10 +283,10 @@ export function Results({ onSelect, quizData }: ResultsProps) {
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-4">
             Based on your <strong>{systemDisplay}</strong> ({sizeDisplay}) and preference for <strong>{priority === 'budget' ? 'lowest upfront cost' : priority === 'value' ? 'best value' : 'maximum performance'}</strong>, here are our recommended installation packages.
           </p>
-          {rebate > 0 && (
+          {pricing.rebateApplied > 0 && (
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-4 py-1 text-base font-medium">
                <Tag className="w-4 h-4 mr-2 inline-block" />
-               Includes ${rebate} rebate from promo code: {promoCode}
+               Includes ${pricing.rebateApplied} rebate from promo code: {promoCode}
             </Badge>
           )}
         </motion.div>
