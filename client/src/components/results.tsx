@@ -9,38 +9,68 @@ interface ResultsProps {
   quizData: Record<string, string>;
 }
 
-// Pricing Data Lookup Table
-// Keys: systemType -> brand -> size -> tier -> [priceRange, monthly]
-// 'package' and 'split' keys added to support system type differentiation
-const PRICING_DATA: Record<string, Record<string, Record<string, { silver: string[], gold: string[], platinum: string[] }>>> = {
-  package: {
-    ameristar: {
-      '2ton': { silver: ["$7,500 - $8,500", "$105/mo"], gold: ["$9,000 - $10,000", "$135/mo"], platinum: ["$11,000 - $12,000", "$165/mo"] },
-      '3ton': { silver: ["$9,250 - $10,250", "$130/mo"], gold: ["$11,000 - $12,250", "$165/mo"], platinum: ["$13,000 - $14,500", "$200/mo"] }, // Interpolated
-      '4ton': { silver: ["$11,000 - $12,000", "$155/mo"], gold: ["$13,000 - $14,500", "$195/mo"], platinum: ["$15,000 - $17,000", "$235/mo"] },
-      '5ton': { silver: ["$12,500 - $13,500", "$175/mo"], gold: ["$14,500 - $16,000", "$215/mo"], platinum: ["$16,500 - $18,500", "$255/mo"] },
+// --- Configuration ---
+const MARGIN = 0.55; // 55% Margin
+
+// Labor/Overhead costs
+const COST_LABOR_SMALL = 1000; // 2-3 Ton
+const COST_LABOR_LARGE = 1200; // 4-5 Ton
+
+// Tier Offsets (Added to Silver Retail)
+const OFFSET_GOLD_MIN = 1500;
+const OFFSET_GOLD_MAX = 2000;
+const OFFSET_PLATINUM_MIN = 3000;
+const OFFSET_PLATINUM_MAX = 4000;
+
+
+// --- Dealer Cost Data (Mocked based on provided examples) ---
+// Structure: Brand -> SystemType -> Size -> Cost
+const DEALER_COSTS: Record<string, Record<string, Record<string, number>>> = {
+  ameristar: {
+    split: {
+      '2ton': 3431, 
+      '3ton': 3768, 
+      '4ton': 4598, 
+      '5ton': 4900, // Estimated based on 4ton
     },
-    amstd: {
-      '2ton': { silver: ["$9,500 - $10,500", "$145/mo"], gold: ["$11,000 - $12,500", "$175/mo"], platinum: ["$13,000 - $14,500", "$205/mo"] },
-      '3ton': { silver: ["$11,250 - $12,250", "$170/mo"], gold: ["$13,000 - $14,500", "$205/mo"], platinum: ["$15,000 - $16,750", "$240/mo"] }, // Interpolated
-      '4ton': { silver: ["$13,000 - $14,500", "$195/mo"], gold: ["$15,000 - $16,500", "$235/mo"], platinum: ["$17,000 - $19,000", "$275/mo"] },
-      '5ton': { silver: ["$14,500 - $16,000", "$215/mo"], gold: ["$16,500 - $18,500", "$255/mo"], platinum: ["$19,000 - $21,500", "$295/mo"] },
+    package: {
+      '2ton': 4200, // Estimated premium over split
+      '3ton': 4600, // Estimated
+      '4ton': 5400, // Estimated
+      '5ton': 5800, // Estimated
     }
   },
-  split: {
-    ameristar: {
-      '2ton': { silver: ["$7,500 - $8,500", "$105/mo"], gold: ["$9,000 - $10,000", "$135/mo"], platinum: ["$11,000 - $12,000", "$165/mo"] },
-      '3ton': { silver: ["$9,250 - $10,250", "$130/mo"], gold: ["$11,000 - $12,250", "$165/mo"], platinum: ["$13,000 - $14,500", "$200/mo"] }, // Interpolated
-      '4ton': { silver: ["$11,000 - $12,000", "$155/mo"], gold: ["$13,000 - $14,500", "$195/mo"], platinum: ["$15,000 - $17,000", "$235/mo"] },
-      '5ton': { silver: ["$12,500 - $13,500", "$175/mo"], gold: ["$14,500 - $16,000", "$215/mo"], platinum: ["$16,500 - $18,500", "$255/mo"] },
+  amstd: {
+    split: {
+      '2ton': 5146, 
+      '3ton': 5673, 
+      '4ton': 6800, // Estimated
+      '5ton': 7200, // Estimated
     },
-    amstd: {
-      '2ton': { silver: ["$9,500 - $10,500", "$145/mo"], gold: ["$11,000 - $12,500", "$175/mo"], platinum: ["$13,000 - $14,500", "$205/mo"] },
-      '3ton': { silver: ["$11,250 - $12,250", "$170/mo"], gold: ["$13,000 - $14,500", "$205/mo"], platinum: ["$15,000 - $16,750", "$240/mo"] }, // Interpolated
-      '4ton': { silver: ["$13,000 - $14,500", "$195/mo"], gold: ["$15,000 - $16,500", "$235/mo"], platinum: ["$17,000 - $19,000", "$275/mo"] },
-      '5ton': { silver: ["$14,500 - $16,000", "$215/mo"], gold: ["$16,500 - $18,500", "$255/mo"], platinum: ["$19,000 - $21,500", "$295/mo"] },
+    package: {
+      '2ton': 6200, // Estimated premium
+      '3ton': 6800, // Estimated
+      '4ton': 7900, // Estimated
+      '5ton': 8400, // Estimated
     }
   }
+};
+
+// --- Calculation Logic ---
+
+const calculateRetail = (dealerCost: number, size: string) => {
+  // Determine Labor/Overhead based on size
+  const laborOverhead = (size === '2ton' || size === '3ton') ? COST_LABOR_SMALL : COST_LABOR_LARGE;
+  
+  // Formula: Retail = (Dealer Cost + Labor/Overhead) / (1 - TargetMargin)
+  const baseRetail = (dealerCost + laborOverhead) / (1 - MARGIN);
+  
+  // Round to nearest 100 for cleaner pricing
+  return Math.ceil(baseRetail / 100) * 100;
+};
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
 };
 
 const getPricing = (priority: string, size: string, systemType: string) => {
@@ -49,36 +79,55 @@ const getPricing = (priority: string, size: string, systemType: string) => {
   
   // Normalize inputs
   let normalizedSize = size || '3ton';
-  // Map the quiz answer IDs to our keys
-  // 'package-unit' might be the ID if user selected it, check quiz.tsx IDs
-  // In quiz.tsx we used 'package' and 'split' probably? 
-  // Wait, I need to check quiz.tsx IDs. 
-  // Let's assume 'split' and 'package' based on the request logic.
-  // I will check quiz.tsx IDs in a moment but for now I'll write robust fallback.
-  
-  let normalizedSystemType = 'split'; // Default
+  let normalizedSystemType = 'split'; 
   if (systemType && systemType.includes('package')) {
     normalizedSystemType = 'package';
   }
 
-  // Fallback for size if not found
-  if (!PRICING_DATA[normalizedSystemType][brand][normalizedSize]) {
-    normalizedSize = '3ton'; 
+  // Fallback for cost if not found
+  if (!DEALER_COSTS[brand]?.[normalizedSystemType]?.[normalizedSize]) {
+    // Fallback to ameristar split 3ton if completely lost
+    console.warn(`Pricing data missing for ${brand} ${normalizedSystemType} ${normalizedSize}, using fallback.`);
+    normalizedSize = '3ton';
+    // brand and systemType should exist in top level structure, but let's be safe
   }
 
-  const data = PRICING_DATA[normalizedSystemType][brand][normalizedSize];
+  const dealerCost = DEALER_COSTS[brand][normalizedSystemType][normalizedSize];
+  
+  // Calculate Silver Base Price
+  const silverPrice = calculateRetail(dealerCost, normalizedSize);
+  
+  // Calculate Gold Range
+  const goldMin = silverPrice + OFFSET_GOLD_MIN;
+  const goldMax = silverPrice + OFFSET_GOLD_MAX;
+  
+  // Calculate Platinum Range
+  const platinumMin = silverPrice + OFFSET_PLATINUM_MIN;
+  const platinumMax = silverPrice + OFFSET_PLATINUM_MAX;
+  
+  // Monthly Estimates (approx 1.5% of total)
+  const getMonthly = (total: number) => Math.round(total * 0.015);
 
   return {
-    silver: { range: data.silver[0], monthly: data.silver[1] },
-    gold: { range: data.gold[0], monthly: data.gold[1] },
-    platinum: { range: data.platinum[0], monthly: data.platinum[1] }
+    silver: { 
+      range: `${formatCurrency(silverPrice)} - ${formatCurrency(silverPrice + 500)}`, 
+      monthly: `$${getMonthly(silverPrice)}/mo` 
+    },
+    gold: { 
+      range: `${formatCurrency(goldMin)} - ${formatCurrency(goldMax)}`, 
+      monthly: `$${getMonthly(goldMin)}/mo` 
+    },
+    platinum: { 
+      range: `${formatCurrency(platinumMin)} - ${formatCurrency(platinumMax)}`, 
+      monthly: `$${getMonthly(platinumMin)}/mo` 
+    }
   };
 };
 
 export function Results({ onSelect, quizData }: ResultsProps) {
   const priority = quizData.priority || 'value';
   const size = quizData.size || '3ton';
-  const systemType = quizData.systemType || 'split'; // "systemType" comes from the new question ID
+  const systemType = quizData.systemType || 'split'; 
   
   const pricing = getPricing(priority, size, systemType);
   
