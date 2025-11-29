@@ -9,6 +9,16 @@ export async function registerRoutes(
 ): Promise<Server> {
   
   // Promo Code Routes
+  app.get("/api/promoCodes/:code", async (req, res) => {
+    const code = req.params.code;
+    const promo = await storage.getPromoCodeByCode(code);
+    if (promo && promo.isActive) {
+      res.json({ id: promo.id, code: promo.code, rebate: promo.amount, description: promo.description, status: "Active" });
+    } else {
+      res.status(404).json({ message: "Promo code not found or inactive" });
+    }
+  });
+
   app.get("/api/promoCodes", async (req, res) => {
     const code = req.query.code as string;
     if (code) {
