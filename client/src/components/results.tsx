@@ -152,8 +152,9 @@ const getPricing = (priority: string, size: string, systemType: string, rebate: 
   
   const goldMin = applyRebate(baseSilverPrice + OFFSET_GOLD_MIN, rebate);
   const goldMax = applyRebate(baseSilverPrice + OFFSET_GOLD_MAX, rebate);
-  const platinumMin = applyRebate(baseSilverPrice + OFFSET_PLATINUM_MIN, rebate);
-  const platinumMax = applyRebate(baseSilverPrice + OFFSET_PLATINUM_MAX, rebate);
+  
+  // Platinum = Silver * 1.25
+  const platinumPrice = Math.round(silverPrice * 1.25);
 
   
   // Monthly Estimates (approx 1.5% of total)
@@ -171,9 +172,9 @@ const getPricing = (priority: string, size: string, systemType: string, rebate: 
       monthly: `$${getMonthly(goldMin)}/mo` 
     },
     platinum: { 
-      price: platinumMin,
-      range: `${formatCurrency(platinumMin)} - ${formatCurrency(platinumMax)}`, 
-      monthly: `$${getMonthly(platinumMin)}/mo` 
+      price: platinumPrice,
+      range: `${formatCurrency(platinumPrice)} - ${formatCurrency(platinumPrice + 500)}`, 
+      monthly: `$${getMonthly(platinumPrice)}/mo` 
     },
     rebateApplied: rebate
   };
