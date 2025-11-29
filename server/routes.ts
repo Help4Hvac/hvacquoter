@@ -28,6 +28,11 @@ export async function registerRoutes(
     if (!parsed.success) {
       return res.status(400).json({ message: "Invalid promo code data" });
     }
+
+    // Validation: Rebate capped at $1000
+    if (parsed.data.amount > 1000) {
+      return res.status(400).json({ message: "Rebate capped at $1000" });
+    }
     
     // Check if code already exists
     const existing = await storage.getPromoCodeByCode(parsed.data.code);
@@ -46,6 +51,11 @@ export async function registerRoutes(
     const parsed = insertPromoCodeSchema.partial().safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ message: "Invalid update data" });
+    }
+
+    // Validation: Rebate capped at $1000
+    if (parsed.data.amount !== undefined && parsed.data.amount > 1000) {
+      return res.status(400).json({ message: "Rebate capped at $1000" });
     }
 
     const updated = await storage.updatePromoCode(id, parsed.data);
