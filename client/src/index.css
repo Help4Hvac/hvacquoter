@@ -141,23 +141,28 @@
 }
 
 @layer components {
+  /* CTA Buttons */
+  button, .cta {
+    @apply bg-primary text-primary-foreground rounded px-5 py-2.5 font-bold;
+  }
+  
+  /* Urgency badges (rebates, limited-time offers) */
   .urgent {
-    @apply bg-urgent text-urgent-foreground;
+    @apply bg-urgent text-urgent-foreground px-2.5 py-1 rounded;
   }
   
+  /* Optimism highlights (seasonal promos) */
   .highlight {
-    @apply bg-highlight text-highlight-foreground;
+    @apply bg-highlight text-highlight-foreground px-2.5 py-1 rounded;
   }
   
+  /* Trust accents (warranty info) */
   .trust {
-    @apply bg-trust text-trust-foreground;
+    @apply bg-trust text-trust-foreground px-2.5 py-1 rounded;
   }
   
+  /* Eco-friendly accents */
   .eco {
-    @apply bg-eco text-eco-foreground;
-  }
-  
-  .cta {
-    @apply bg-primary text-primary-foreground;
+    @apply bg-eco text-eco-foreground px-2.5 py-1 rounded;
   }
 }
