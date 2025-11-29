@@ -11,6 +11,7 @@ export default function Home() {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [selectedTier, setSelectedTier] = useState<string | undefined>();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formSubmitted, setFormSubmitted] = useState(false);
   
   const quizRef = useRef<HTMLDivElement>(null);
 
@@ -32,14 +33,18 @@ export default function Home() {
     setIsFormOpen(true);
   };
 
+  const handleFormSuccess = () => {
+    setFormSubmitted(true);
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Navigation - Simplified/Unbranded initially */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-border/50 h-20 flex items-center">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            {/* Only show Branding IF quiz is completed */}
-            {quizCompleted ? (
+            {/* Only show Branding IF form is submitted */}
+            {formSubmitted ? (
               <motion.div 
                 initial={{ opacity: 0 }} 
                 animate={{ opacity: 1 }}
@@ -56,7 +61,7 @@ export default function Home() {
             )}
           </div>
           
-          {quizCompleted && (
+          {formSubmitted && (
             <motion.div 
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }}
@@ -68,7 +73,7 @@ export default function Home() {
             </motion.div>
           )}
 
-          {quizCompleted && (
+          {formSubmitted && (
             <motion.button 
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -112,8 +117,8 @@ export default function Home() {
            </div>
         </div>
 
-        {/* Social Proof Section - Only show after quiz */}
-        {quizCompleted && (
+        {/* Social Proof Section - Only show after form submission */}
+        {formSubmitted && (
           <motion.section 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -148,15 +153,15 @@ export default function Home() {
         <div className="container mx-auto px-4 grid md:grid-cols-4 gap-12">
           <div>
             <div className="text-white font-heading font-bold text-2xl mb-6">
-              {quizCompleted ? "ComfortAir" : "HVAC Quote Tool"}
+              {formSubmitted ? "ComfortAir" : "HVAC Quote Tool"}
             </div>
             <p className="text-sm leading-relaxed">
               Providing transparent, high-quality HVAC solutions for modern homeowners. We believe in honest pricing and expert craftsmanship.
             </p>
           </div>
           
-          {/* Only show detailed footer links if quiz is completed, otherwise keep it minimal */}
-          {quizCompleted ? (
+          {/* Only show detailed footer links if form is submitted, otherwise keep it minimal */}
+          {formSubmitted ? (
             <>
               <div>
                 <h4 className="text-white font-bold mb-6">Services</h4>
@@ -195,6 +200,7 @@ export default function Home() {
         isOpen={isFormOpen} 
         onClose={() => setIsFormOpen(false)} 
         selectedTier={selectedTier} 
+        onSuccess={handleFormSuccess}
       />
     </div>
   );

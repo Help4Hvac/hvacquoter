@@ -21,9 +21,10 @@ interface LeadFormProps {
   selectedTier?: string;
   isOpen: boolean;
   onClose: () => void;
+  onSuccess: () => void;
 }
 
-export function LeadForm({ selectedTier, isOpen, onClose }: LeadFormProps) {
+export function LeadForm({ selectedTier, isOpen, onClose, onSuccess }: LeadFormProps) {
   const [submitted, setSubmitted] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -41,10 +42,11 @@ export function LeadForm({ selectedTier, isOpen, onClose }: LeadFormProps) {
     // Mock submission
     console.log("Form submitted:", { ...values, tier: selectedTier });
     setSubmitted(true);
+    onSuccess(); // Notify parent that form was submitted
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden gap-0 rounded-xl">
         {submitted ? (
           <div className="p-12 flex flex-col items-center text-center">
@@ -53,15 +55,15 @@ export function LeadForm({ selectedTier, isOpen, onClose }: LeadFormProps) {
             </div>
             <h3 className="text-2xl font-bold font-heading text-foreground mb-2">Quote Request Received!</h3>
             <p className="text-muted-foreground mb-8">
-              We've received your details and preference for the <span className="font-semibold text-primary">{selectedTier}</span> package. One of our certified technicians will contact you shortly to confirm details.
+              We've received your details and preference for the <span className="font-semibold text-primary">{selectedTier}</span> package. A certified ComfortAir technician will contact you shortly to confirm details.
             </p>
-            <Button onClick={onClose} className="w-full bg-primary text-white">Close</Button>
+            <Button onClick={onClose} className="w-full bg-primary text-white font-bold">Close & Visit ComfortAir</Button>
           </div>
         ) : (
           <>
             <div className="bg-primary p-6 text-white">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-heading">Schedule Your Installation</DialogTitle>
+                <DialogTitle className="text-2xl font-heading">Get Your Official Estimate</DialogTitle>
                 <DialogDescription className="text-blue-100 mt-1">
                   Lock in your price estimate for the <span className="font-bold text-white capitalize">{selectedTier?.replace(/-/g, ' ')}</span> package.
                 </DialogDescription>
@@ -147,7 +149,7 @@ export function LeadForm({ selectedTier, isOpen, onClose }: LeadFormProps) {
                   />
 
                   <Button type="submit" className="w-full h-12 text-lg font-bold bg-accent hover:bg-accent/90 text-white mt-2">
-                    Request Appointment
+                    Request Official Quote
                   </Button>
                   
                   <p className="text-xs text-center text-muted-foreground mt-4">

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Star, Phone, Shield, Clock } from "lucide-react";
+import { ArrowRight, Star, Shield, Clock } from "lucide-react";
 import heroImage from "@assets/generated_images/modern_bright_living_room_with_subtle_hvac_vent.png";
 
 interface HeroProps {
@@ -30,11 +30,11 @@ export function Hero({ onStartQuiz }: HeroProps) {
               <Star size={14} fill="currentColor" />
               <Star size={14} fill="currentColor" />
             </div>
-            <span className="text-sm font-medium text-white/90">Top Rated HVAC in Your Area</span>
+            <span className="text-sm font-medium text-white/90">Trusted by 10,000+ Homeowners</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-heading font-extrabold leading-[1.1] tracking-tight">
-            Transparent HVAC Quotes in <span className="text-accent">Seconds.</span>
+            Fair HVAC Pricing in <span className="text-accent">Seconds.</span>
           </h1>
           
           <p className="text-xl text-slate-200 leading-relaxed max-w-lg">
@@ -48,24 +48,16 @@ export function Hero({ onStartQuiz }: HeroProps) {
               className="h-16 px-8 text-lg font-bold bg-accent hover:bg-accent/90 text-white shadow-lg shadow-accent/20 transition-transform hover:scale-105"
               data-testid="hero-start-quiz"
             >
-              Get My Instant Quote <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="h-16 px-8 text-lg font-semibold bg-white/5 border-white/20 text-white hover:bg-white/10 backdrop-blur-sm"
-            >
-              <Phone className="mr-2 w-5 h-5" /> (800) 555-0199
+              See My Pricing Options <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
           </div>
 
           <div className="flex items-center gap-8 pt-8 text-sm font-medium text-slate-300/80">
             <div className="flex items-center gap-2">
-               <Shield className="w-5 h-5 text-accent" /> Licensed & Insured
+               <Shield className="w-5 h-5 text-accent" /> 100% Free & No Obligation
             </div>
             <div className="flex items-center gap-2">
-               <Clock className="w-5 h-5 text-accent" /> Same-Day Service
+               <Clock className="w-5 h-5 text-accent" /> Instant Results
             </div>
           </div>
         </div>
